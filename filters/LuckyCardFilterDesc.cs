@@ -2,16 +2,16 @@ using System.Runtime.Intrinsics;
 
 namespace Motely;
 
-public class LuckyCardFilterDesc() : IMotelySeedFilterDesc
+public struct LuckyCardFilterDesc() : IMotelySeedFilterDesc<LuckyCardFilterDesc.LuckyCardFilter>
 {
 
-    public IMotelySeedFilter CreateFilter(ref MotelyFilterCreationContext ctx)
+    public LuckyCardFilter CreateFilter(ref MotelyFilterCreationContext ctx)
     {
         ctx.RegisterPseudoRNG("lucky_money");
         return new LuckyCardFilter();
     }
 
-    public class LuckyCardFilter() : IMotelySeedFilter
+    public struct LuckyCardFilter() : IMotelySeedFilter
     {
 
         public Vector512<double> Filter(ref MotelySearchContext searchContext)

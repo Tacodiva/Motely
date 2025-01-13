@@ -2,17 +2,17 @@ using System.Runtime.Intrinsics;
 
 namespace Motely;
 
-public class NaNSeedFilterDesc(string pseudoHashKey) : IMotelySeedFilterDesc
+public struct NaNSeedFilterDesc(string pseudoHashKey) : IMotelySeedFilterDesc<NaNSeedFilterDesc.NaNSeedFilter>
 {
     public string PseudoHashKey { get; set; } = pseudoHashKey;
 
-    public IMotelySeedFilter CreateFilter(ref MotelyFilterCreationContext ctx)
+    public NaNSeedFilter CreateFilter(ref MotelyFilterCreationContext ctx)
     {
         ctx.RegisterPseudoHash(PseudoHashKey);
         return new NaNSeedFilter(PseudoHashKey);
     }
 
-    public class NaNSeedFilter(string pseudoHashKey) : IMotelySeedFilter
+    public struct NaNSeedFilter(string pseudoHashKey) : IMotelySeedFilter
     {
         public readonly string PseudoHashKey = pseudoHashKey;
 

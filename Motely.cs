@@ -8,6 +8,8 @@ public class Motely
 {
     //RDNCZ58P
 
+    public const int MaxPseudoHashKeyLength = 20;
+
     // public static readonly char[] SeedDigits = [.. "CPRDNZ58AB"];
     public static readonly char[] SeedDigits = [.. "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
     public const int MaxSeedLength = 8;

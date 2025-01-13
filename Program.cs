@@ -1,8 +1,7 @@
 ﻿
 using Motely;
 
-new MotelySearchSettings()
+// new MotelySearchSettings<NaNSeedFilterDesc, NaNSeedFilterDesc.NaNSeedFilter>(new NaNSeedFilterDesc("erratic"))
+new MotelySearchSettings<LuckyCardFilterDesc, LuckyCardFilterDesc.LuckyCardFilter>(new LuckyCardFilterDesc())
     .WithThreadCount(14)
-    .WithFilter(new NaNSeedFilterDesc("erratic"))
-    // .WithFilter(new LuckyCardFilterDesc())
     .Search();
