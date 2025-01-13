@@ -3,21 +3,20 @@ using System.Runtime.Intrinsics;
 
 namespace Motely;
 
-public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObservatoryFilterDesc.LuckyCardFilter>
+public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObservatoryFilterDesc.PerkeoObservatoryFilter>
 {
 
-    public LuckyCardFilter CreateFilter(ref MotelyFilterCreationContext ctx)
+    public PerkeoObservatoryFilter CreateFilter(ref MotelyFilterCreationContext ctx)
     {
         ctx.RegisterPseudoRNG("lucky_money");
-        return new LuckyCardFilter();
+        return new PerkeoObservatoryFilter();
     }
 
-    public struct LuckyCardFilter() : IMotelySeedFilter
+    public struct PerkeoObservatoryFilter() : IMotelySeedFilter
     {
 
         public Vector512<double> Filter(ref MotelySearchContext searchContext)
         {
-
             MotelyPrngStream luckyMoney = searchContext.GetPrngStream("lucky_money");
 
             Vector512<double> mask = Vector512<double>.AllBitsSet;
