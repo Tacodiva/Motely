@@ -69,9 +69,10 @@ public sealed class MotelySearchSettings<TFilterDesc, TFilter>
     }
 }
 
-public unsafe ref struct MotelySearchContext(Vector512<double>* seedHashes)
+public unsafe ref struct MotelySearchContext(Vector512<double>* seedHashes, int* seedHashesLookup)
 {
 
+    private readonly int* _seedHashesLookup = seedHashesLookup;
     // A map of pseudohash key length => seed hash up to that point
     private readonly Vector512<double>* _seedHashes = seedHashes;
 
@@ -83,7 +84,7 @@ public unsafe ref struct MotelySearchContext(Vector512<double>* seedHashes)
 #if MOTELY_SAFE
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(key.Length, Motely.MaxPseudoHashKeyLength);
 #endif
-        Vector512<double> calcVector = _seedHashes[key.Length];
+        Vector512<double> calcVector = _seedHashes[_seedHashesLookup[key.Length]];
 
         for (int i = key.Length - 1; i >= 0; i--)
         {
@@ -194,8 +195,9 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
 
     private readonly int _threadCount;
     private readonly TFilter _filter;
-    private readonly int[] _pseudoHashKeyLengths;
-    private readonly int[] _pseudoHashReverseMap;
+    private readonly int _pseudoHashKeyLengthCount;
+    private readonly int* _pseudoHashKeyLengths;
+    private readonly int* _pseudoHashReverseMap;
 
     private int _batchIndex;
     private int _finishedBatchCount;
@@ -208,10 +210,19 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
         MotelyFilterCreationContext filterCreationContext = new();
         _filter = settings.FilterDesc.CreateFilter(ref filterCreationContext);
 
-        _pseudoHashKeyLengths = filterCreationContext.PseudohashKeyLengths.ToArray();
-        _pseudoHashReverseMap = new int[Motely.MaxPseudoHashKeyLength];
+        int[] pseudohashKeyLengths = filterCreationContext.PseudohashKeyLengths.ToArray();
+        _pseudoHashKeyLengthCount = pseudohashKeyLengths.Length;
+        _pseudoHashKeyLengths = (int*)Marshal.AllocHGlobal(sizeof(int) * _pseudoHashKeyLengthCount);
 
-        for (int i = 0; i < _pseudoHashKeyLengths.Length; i++) {
+        for (int i = 0; i < _pseudoHashKeyLengthCount; i++)
+        {
+            _pseudoHashKeyLengths[i] = pseudohashKeyLengths[i];
+        }
+
+        _pseudoHashReverseMap = (int*)Marshal.AllocHGlobal(sizeof(int) * Motely.MaxPseudoHashKeyLength);
+
+        for (int i = 0; i < _pseudoHashKeyLengthCount; i++)
+        {
             _pseudoHashReverseMap[_pseudoHashKeyLengths[i]] = i;
         }
     }
@@ -228,7 +239,8 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
             threads[i] = new(this, i);
         }
 
-        _batchIndex = -2;
+        // _batchIndex = -2;
+        _batchIndex = -1;
 
         foreach (MotelySearchThread thread in threads)
             thread.Thread.Start();
@@ -249,8 +261,6 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
         public readonly Thread Thread;
         public readonly MotelySearch<TFilterDesc, TFilter> Search;
 
-        private readonly Vector512<double>* _seedHashes;
-
         private char* digits;
 
         public MotelySearchThread(MotelySearch<TFilterDesc, TFilter> search, int index)
@@ -264,12 +274,10 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
             };
 
             digits = (char*)Marshal.AllocHGlobal(sizeof(char) * Motely.MaxSeedLength);
-            _seedHashes = (Vector512<double>*)Marshal.AllocHGlobal(sizeof(Vector512<double>) * Motely.MaxPseudoHashKeyLength);
         }
 
         private void ThreadMain()
         {
-
             while (true)
             {
                 int batchIdx = Interlocked.Increment(ref Search._batchIndex);
@@ -303,6 +311,7 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
             }
         }
 
+        [SkipLocalsInit]
         private void SearchBatch(int batchIdx)
         {
 
@@ -314,10 +323,10 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
                 batchIdx /= Motely.SeedDigits.Length;
             }
 
-            Vector512<double>[] hashes = new Vector512<double>[Search._pseudoHashKeyLengths.Length];
+            Vector512<double>* hashes = stackalloc Vector512<double>[Search._pseudoHashKeyLengthCount];
 
             // Calculate hash for the first two digits at all the required pseudohash lengths
-            for (int pseudohashKeyIdx = 0; pseudohashKeyIdx < Search._pseudoHashKeyLengths.Length; pseudohashKeyIdx++)
+            for (int pseudohashKeyIdx = 0; pseudohashKeyIdx < Search._pseudoHashKeyLengthCount; pseudohashKeyIdx++)
             {
                 int pseudohashKeyLength = Search._pseudoHashKeyLengths[pseudohashKeyIdx];
 
@@ -343,15 +352,17 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         [SkipLocalsInit]
-        private void SearchVector(int i, Vector512<double> seedDigitVector, ReadOnlySpan<Vector512<double>> nums, int numsChannel)
+        private void SearchVector(int i, Vector512<double> seedDigitVector, Vector512<double>* nums, int numsChannel)
         {
-            Span<Vector512<double>> hashes = stackalloc Vector512<double>[Search._pseudoHashKeyLengths.Length];
+            Vector512<double>* hashes = stackalloc Vector512<double>[Search._pseudoHashKeyLengthCount];
 
-            for (int pseudohashKeyIdx = 0; pseudohashKeyIdx < Search._pseudoHashKeyLengths.Length; pseudohashKeyIdx++)
+            for (int pseudohashKeyIdx = 0; pseudohashKeyIdx < Search._pseudoHashKeyLengthCount; pseudohashKeyIdx++)
             {
                 int pseudohashKeyLength = Search._pseudoHashKeyLengths[pseudohashKeyIdx];
 
-                Vector512<double> calcVector = Vector512.Divide(Vector512.Create(1.1239285023), nums[pseudohashKeyIdx][numsChannel]);
+
+
+                Vector512<double> calcVector = Vector512.Divide(Vector512.Create(1.1239285023), ((double*)&nums[pseudohashKeyIdx])[numsChannel]);
 
                 calcVector = Vector512.Multiply(calcVector, seedDigitVector);
 
@@ -366,13 +377,7 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
 
             if (i == 0)
             {
-                for (int pseudohashKeyIdx = 0; pseudohashKeyIdx < Search._pseudoHashKeyLengths.Length; pseudohashKeyIdx++)
-                {
-                    int pseudohashKeyLength = Search._pseudoHashKeyLengths[pseudohashKeyIdx];
-                    _seedHashes[pseudohashKeyLength] = hashes[pseudohashKeyIdx];
-                }
-
-                MotelySearchContext searchContext = new(_seedHashes);
+                MotelySearchContext searchContext = new(hashes, Search._pseudoHashReverseMap);
                 Vector512<double> results = Search._filter.Filter(ref searchContext);
 
                 if (!Vector512.EqualsAll(results, Vector512<double>.Zero))
@@ -415,7 +420,6 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
         public void Dispose()
         {
             Marshal.FreeHGlobal((nint)digits);
-            Marshal.FreeHGlobal((nint)_seedHashes);
         }
     }
 }
