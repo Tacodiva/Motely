@@ -18,21 +18,23 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
     public struct PerkeoObservatoryFilter() : IMotelySeedFilter
     {
 
-        public readonly Vector512<double> Filter(ref MotelySearchContext searchContext)
+        public readonly Vector512<double> Filter(ref MotelyVectorSearchContext searchContext)
         {
-            MotelyVoucherStream stream = searchContext.GetVoucherStream(1);
-            MotelyRunStateVoucher voucherState = new();
-
-            VectorEnum256<MotelyVoucher> vouchers = searchContext.GetNextVoucher(ref stream, voucherState);
+            VectorEnum256<MotelyVoucher> vouchers = searchContext.GetAnteFirstVoucher(1);
 
             Vector256<int> matching = VectorEnum256.Equals(vouchers, MotelyVoucher.Telescope);
 
-            // FancyConsole.WriteLine(vouchers.ToString());
+            if (Vector256.EqualsAll(matching, Vector256<int>.Zero))
+                return Vector512<double>.Zero;
 
-            
+            MotelyVectorRunStateVoucher voucherState = new();
+            voucherState.ActivateVoucher(MotelyVoucher.Telescope);
 
-            return Vector512.Create(matching, matching).AsDouble();
-            // return Vector512<double>.AllBitsSet;
+            vouchers = searchContext.GetAnteFirstVoucher(2, voucherState);
+
+            matching &= VectorEnum256.Equals(vouchers, MotelyVoucher.Observatory);
+
+            return MotelyVectorUtils.ExtendIntMaskToDouble(matching);
         }
     }
 }

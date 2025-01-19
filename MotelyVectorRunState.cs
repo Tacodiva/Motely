@@ -5,9 +5,9 @@ using System.Runtime.Intrinsics;
 namespace Motely;
 
 
-public ref struct MotelyRunStateVoucher
+public ref struct MotelyVectorRunStateVoucher
 {
-    static MotelyRunStateVoucher()
+    static MotelyVectorRunStateVoucher()
     {
         // Check that we can fit all the voucher state in an int
         if (MotelyEnum<MotelyVoucher>.ValueCount > 32)
@@ -40,24 +40,4 @@ public ref struct MotelyRunStateVoucher
             StateBitfield & MotelyVectorUtils.ShiftLeft(Vector256<int>.One, voucherVector.HardwareVector)
         ));
     }
-}
-
-
-public ref struct MotelyVoucherStream(int ante, MotelyPrngStream prngStream)
-{
-    public const int StackResampleCount = 8;
-
-    [InlineArray(StackResampleCount)]
-    public struct MotelyVoucherResampleStreams
-    {
-        public MotelyPrngStream PrngStream;
-    }
-
-    public readonly int Ante = ante;
-    public MotelyPrngStream MainStream = prngStream;
-    public MotelyVoucherResampleStreams ResampleStreams;
-    public int ResampleStreamInitCount;
-    public List<object>? HighResampleStreams;
-    
-
 }

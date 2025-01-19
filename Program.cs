@@ -1,9 +1,9 @@
 ﻿
 using Motely;
 
-// new MotelySearchSettings<NaNSeedFilterDesc, NaNSeedFilterDesc.NaNSeedFilter>(new NaNSeedFilterDesc("erratic"))
-// new MotelySearchSettings<LuckyCardFilterDesc, LuckyCardFilterDesc.LuckyCardFilter>(new LuckyCardFilterDesc())
-new MotelySearchSettings<PerkeoObservatoryFilterDesc, PerkeoObservatoryFilterDesc.PerkeoObservatoryFilter>(new PerkeoObservatoryFilterDesc())
+// await new MotelySearchSettings<NaNSeedFilterDesc.NaNSeedFilter>(new NaNSeedFilterDesc("erratic"))
+// await new MotelySearchSettings<LuckyCardFilterDesc.LuckyCardFilter>(new LuckyCardFilterDesc())
+await new MotelySearchSettings<PerkeoObservatoryFilterDesc.PerkeoObservatoryFilter>(new PerkeoObservatoryFilterDesc())
     // .WithThreadCount(Environment.ProcessorCount - 2)
     .WithThreadCount(1)
-    .Search();
+    .Start();

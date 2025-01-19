@@ -34,47 +34,33 @@ public interface IMotelySeedFilterDesc<TFilter> where TFilter : struct, IMotelyS
 
 public interface IMotelySeedFilter
 {
-    public Vector512<double> Filter(ref MotelySearchContext searchContext);
+    public Vector512<double> Filter(ref MotelyVectorSearchContext searchContext);
 }
 
-
-public struct MotelyPrngStream(Vector512<double> state)
-{
-    public Vector512<double> State = state;
-}
-
-public sealed class MotelySearchSettings<TFilterDesc, TFilter>
-    where TFilterDesc : struct, IMotelySeedFilterDesc<TFilter>
+public sealed class MotelySearchSettings<TFilter>(IMotelySeedFilterDesc<TFilter> filterDesc)
     where TFilter : struct, IMotelySeedFilter
 {
-
     public int ThreadCount { get; set; } = Environment.ProcessorCount;
 
-    public TFilterDesc FilterDesc;
+    public IMotelySeedFilterDesc<TFilter> FilterDesc { get; set; } = filterDesc;
 
-    public MotelySearchSettings(TFilterDesc filterDesc)
-    {
-        FilterDesc = filterDesc;
-    }
-
-    public MotelySearchSettings<TFilterDesc, TFilter> WithThreadCount(int threadCount)
+    public MotelySearchSettings<TFilter> WithThreadCount(int threadCount)
     {
         ThreadCount = threadCount;
         return this;
     }
 
-    public void Search()
+    public Task Start() => Task.Run(() =>
     {
-        new MotelySearch<TFilterDesc, TFilter>(this).Search();
-    }
+        new MotelySearch<TFilter>(this).Search();
+    });
 }
 
-public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
-    where TFilterDesc : struct, IMotelySeedFilterDesc<TFilter>
+public unsafe sealed class MotelySearch<TFilter>
     where TFilter : struct, IMotelySeedFilter
 {
     // A cache of vectors containing all the seed's digits.
-    private static Vector512<double>[] SeedDigitVectors = new Vector512<double>[(Motely.SeedDigits.Length + Vector512<double>.Count - 1) / Vector512<double>.Count];
+    private static readonly Vector512<double>[] SeedDigitVectors = new Vector512<double>[(Motely.SeedDigits.Length + Vector512<double>.Count - 1) / Vector512<double>.Count];
 
     [SkipLocalsInit]
     static MotelySearch()
@@ -115,7 +101,7 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
     private int _finishedBatchCount;
     private readonly Stopwatch _elapsedTime = new();
 
-    public MotelySearch(MotelySearchSettings<TFilterDesc, TFilter> settings)
+    public MotelySearch(MotelySearchSettings<TFilter> settings)
     {
         _threadCount = settings.ThreadCount;
 
@@ -151,8 +137,8 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
             threads[i] = new(this, i);
         }
 
-        // _batchIndex = -2;
-        _batchIndex = -1;
+        // _batchIndex = -1;
+        _batchIndex = 4;
 
         foreach (MotelySearchThread thread in threads)
             thread.Thread.Start();
@@ -171,11 +157,11 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
     {
         public readonly int ThreadIndex;
         public readonly Thread Thread;
-        public readonly MotelySearch<TFilterDesc, TFilter> Search;
+        public readonly MotelySearch<TFilter> Search;
 
-        private char* digits;
+        private readonly char* _digits;
 
-        public MotelySearchThread(MotelySearch<TFilterDesc, TFilter> search, int index)
+        public MotelySearchThread(MotelySearch<TFilter> search, int index)
         {
             ThreadIndex = index;
             Search = search;
@@ -185,7 +171,7 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
                 Name = $"Motely Search Thread {index}"
             };
 
-            digits = (char*)Marshal.AllocHGlobal(sizeof(char) * Motely.MaxSeedLength);
+            _digits = (char*)Marshal.AllocHGlobal(sizeof(char) * Motely.MaxSeedLength);
         }
 
         private void ThreadMain()
@@ -231,7 +217,7 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
             for (int i = 0; i < BatchCharacters; i++)
             {
                 int charIndex = batchIdx % Motely.SeedDigits.Length;
-                digits[Motely.MaxSeedLength - i - 1] = Motely.SeedDigits[charIndex];
+                _digits[Motely.MaxSeedLength - i - 1] = Motely.SeedDigits[charIndex];
                 batchIdx /= Motely.SeedDigits.Length;
             }
 
@@ -246,7 +232,7 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
 
                 for (int i = Motely.MaxSeedLength - 1; i > Motely.MaxSeedLength - 1 - BatchCharacters; i--)
                 {
-                    num = (1.1239285023 / num * digits[i] * Math.PI + (i + pseudohashKeyLength + 1) * Math.PI) % 1;
+                    num = (1.1239285023 / num * _digits[i] * Math.PI + (i + pseudohashKeyLength + 1) * Math.PI) % 1;
                 }
 
                 hashes[pseudohashKeyIdx] = Vector512.Create(num);
@@ -272,8 +258,6 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
             {
                 int pseudohashKeyLength = Search._pseudoHashKeyLengths[pseudohashKeyIdx];
 
-
-
                 Vector512<double> calcVector = Vector512.Divide(Vector512.Create(1.1239285023), ((double*)&nums[pseudohashKeyIdx])[numsChannel]);
 
                 calcVector = Vector512.Multiply(calcVector, seedDigitVector);
@@ -289,7 +273,7 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
 
             if (i == 0)
             {
-                MotelySearchContext searchContext = new(hashes, Search._pseudoHashReverseMap);
+                MotelyVectorSearchContext searchContext = new(hashes, Search._pseudoHashReverseMap);
                 Vector512<double> results = Search._filter.Filter(ref searchContext);
 
                 if (!Vector512.EqualsAll(results, Vector512<double>.Zero))
@@ -298,22 +282,20 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
                     {
                         if (results[channel] != 0)
                         {
-                            digits[0] = (char)seedDigitVector[channel];
+                            _digits[0] = (char)seedDigitVector[channel];
 
                             string seed = "";
 
                             for (int digit = 0; digit < Motely.MaxSeedLength; digit++)
                             {
-                                if (digits[digit] != '\0')
-                                    seed += digits[digit];
+                                if (_digits[digit] != '\0')
+                                    seed += _digits[digit];
                             }
 
                             FancyConsole.WriteLine($"{seed}");
                         }
                     }
                 }
-
-                // Environment.Exit(0);
             }
             else
             {
@@ -321,7 +303,7 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
                 {
                     if (seedDigitVector[channel] == 0) break;
 
-                    digits[i] = (char)seedDigitVector[channel];
+                    _digits[i] = (char)seedDigitVector[channel];
 
                     for (int vectorIndex = 0; vectorIndex < SeedDigitVectors.Length; vectorIndex++)
                     {
@@ -333,7 +315,7 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
 
         public void Dispose()
         {
-            Marshal.FreeHGlobal((nint)digits);
+            Marshal.FreeHGlobal((nint)_digits);
         }
     }
 }
