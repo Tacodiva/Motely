@@ -18,7 +18,7 @@ public struct NaNSeedFilterDesc(string pseudoHashKey) : IMotelySeedFilterDesc<Na
 
         public Vector512<double> Filter(ref MotelySearchContext searchContext)
         {
-            Vector512<double> prng = searchContext.IteratePRNG(searchContext.PseudoHash(PseudoHashKey));
+            Vector512<double> prng = MotelySearchContext.IteratePRNG(searchContext.PseudoHash(PseudoHashKey));
             return ~Vector512.Equals(prng, prng);
         }
     }

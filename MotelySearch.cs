@@ -312,6 +312,8 @@ public unsafe sealed class MotelySearch<TFilterDesc, TFilter>
                         }
                     }
                 }
+
+                // Environment.Exit(0);
             }
             else
             {

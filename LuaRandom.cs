@@ -106,9 +106,9 @@ public static class VectorLuaRandomSingle
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static Vector512<double> RandInt(Vector512<double> seed, int min, int max)
+    public static Vector256<int> RandInt(Vector512<double> seed, int min, int max)
     {
-        return Vector512.Round(Random(seed) * (max - min + 1)) + Vector512.Create<double>(min);
+        return MotelyVectorUtils.ConvertToVector256Int32(Random(seed) * (max - min)) + Vector256.Create<int>(min);
     }
 }
 
@@ -213,9 +213,9 @@ public struct VectorLuaRandom
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector512<double> RandInt(int min, int max)
+    public Vector256<int> RandInt(int min, int max)
     {
-        return Vector512.Round(Random() * (max - min + 1)) + Vector512.Create<double>(min);
+        return MotelyVectorUtils.ConvertToVector256Int32(Random() * (max - min + 1)) + Vector256.Create<int>(min);
     }
 }
 
