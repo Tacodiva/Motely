@@ -45,7 +45,14 @@ public static class FancyConsole
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
-    public static void WriteLine(string message)
+    public static void WriteLine<T>(T message)
+    {
+        WriteLine(message?.ToString() ?? null);
+    }
+
+
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public static void WriteLine(string? message)
     {
         (int oldLeft, int oldTop) = Console.GetCursorPosition();
 
@@ -54,7 +61,7 @@ public static class FancyConsole
             ClearBottomLine();
         }
 
-        Console.WriteLine(message);
+        Console.WriteLine(message ?? "null");
 
         if (oldTop == Console.BufferHeight - 1)
         {

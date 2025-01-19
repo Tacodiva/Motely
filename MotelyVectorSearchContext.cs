@@ -10,13 +10,26 @@ public struct MotelyVectorPrngStream(Vector512<double> state)
     public Vector512<double> State = state;
 }
 
+public ref struct MotelyVectorResampleStream(MotelyVectorPrngStream initialPrngStream)
+{
+    public const int StackResampleCount = 8;
+
+    [InlineArray(StackResampleCount)]
+    public struct MotelyResampleStreams
+    {
+        public MotelyVectorPrngStream PrngStream;
+    }
+
+    public MotelyVectorPrngStream InitialPrngStream = initialPrngStream;
+    public MotelyResampleStreams ResamplePrngStreams;
+    public int ResamplePrngStreamInitCount;
+    public List<object>? HighResamplePrngStreams;
+}
+
 public delegate bool MotelyIndividualSeedSearcher(ref MotelySingleSearchContext searchContext);
 
 public unsafe ref partial struct MotelyVectorSearchContext
 {
-
-    // QKME1116 ???
-
     private SeedHashCache _seedHashCache;
 
 #if !DEBUG
@@ -110,17 +123,17 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public void IteratePrngStream(ref MotelyVectorPrngStream stream)
+    public Vector512<double> GetNextPrngState(ref MotelyVectorPrngStream stream)
     {
-        stream.State = IteratePRNG(stream.State);
+        return stream.State = IteratePRNG(stream.State);
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public void IteratePrngStream(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
+    public Vector512<double> GetNextPrngState(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
     {
-        stream.State = Vector512.ConditionalSelect(mask, IteratePRNG(stream.State), stream.State);
+        return stream.State = Vector512.ConditionalSelect(mask, IteratePRNG(stream.State), stream.State);
     }
 
 #if !DEBUG
@@ -128,23 +141,21 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #endif
     public Vector512<double> IteratePseudoSeed(ref MotelyVectorPrngStream stream)
     {
-        IteratePrngStream(ref stream);
-        return (stream.State + _seedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
+        return (GetNextPrngState(ref stream) + _seedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector512<double> IteratePseudoSeed(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
+    public Vector512<double> GetNextPseudoSeed(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
     {
-        IteratePrngStream(ref stream, mask);
-        return (stream.State + _seedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
+        return (GetNextPrngState(ref stream, mask) + _seedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector512<double> IteratePrngRandom(ref MotelyVectorPrngStream stream)
+    public Vector512<double> GetNextRandom(ref MotelyVectorPrngStream stream)
     {
         return VectorLuaRandom.Random(IteratePseudoSeed(ref stream));
     }
@@ -152,15 +163,15 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector512<double> IteratePrngRandom(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
+    public Vector512<double> GetNextRandom(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
     {
-        return VectorLuaRandom.Random(IteratePseudoSeed(ref stream, mask));
+        return VectorLuaRandom.Random(GetNextPseudoSeed(ref stream, mask));
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector256<int> IteratePrngRandomInt(ref MotelyVectorPrngStream stream, int min, int max)
+    public Vector256<int> GetNextRandomInt(ref MotelyVectorPrngStream stream, int min, int max)
     {
         return VectorLuaRandom.RandInt(IteratePseudoSeed(ref stream), min, max);
     }
@@ -168,7 +179,7 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector256<int> IteratePrngRandomInt(ref MotelyVectorPrngStream stream, int min, int max, in Vector512<double> mask)
+    public Vector256<int> GetNextRandomInt(ref MotelyVectorPrngStream stream, int min, int max, in Vector512<double> mask)
     {
         return VectorLuaRandom.RandInt(IteratePseudoSeed(ref stream), min, max);
     }
@@ -176,16 +187,76 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public VectorEnum256<T> IteratePrngRandElement<T>(ref MotelyVectorPrngStream stream, T[] choices) where T : unmanaged, Enum
+    public VectorEnum256<T> GetNextRandomElement<T>(ref MotelyVectorPrngStream stream, T[] choices) where T : unmanaged, Enum
     {
-        return VectorEnum256.Create(IteratePrngRandomInt(ref stream, 0, choices.Length), choices);
+        return VectorEnum256.Create(GetNextRandomInt(ref stream, 0, choices.Length), choices);
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public VectorEnum256<T> IteratePrngRandElement<T>(ref MotelyVectorPrngStream stream, T[] choices, in Vector512<double> mask) where T : unmanaged, Enum
+    public VectorEnum256<T> GetNextRandomElement<T>(ref MotelyVectorPrngStream stream, T[] choices, in Vector512<double> mask) where T : unmanaged, Enum
     {
-        return VectorEnum256.Create(IteratePrngRandomInt(ref stream, 0, choices.Length, mask), choices);
+        return VectorEnum256.Create(GetNextRandomInt(ref stream, 0, choices.Length, mask), choices);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private MotelyVectorPrngStream CreateResamplePrngStream(string key, int resample)
+    {
+        return CreatePrngStream(key + MotelyPrngKeys.Resample + (resample + 2));
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private MotelyVectorResampleStream CreateResampleStream(string key)
+    {
+        return new(CreatePrngStream(key));
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private ref MotelyVectorPrngStream GetResamplePrngStream(ref MotelyVectorResampleStream resampleStream, string key, int resample)
+    {
+
+        if (resample < MotelyVectorResampleStream.StackResampleCount)
+        {
+            ref MotelyVectorPrngStream prngStream = ref resampleStream.ResamplePrngStreams[resample];
+
+            if (resample == resampleStream.ResamplePrngStreamInitCount)
+            {
+                ++resampleStream.ResamplePrngStreamInitCount;
+                prngStream = CreateResamplePrngStream(key, resample);
+            }
+
+            return ref prngStream;
+        }
+
+        {
+            if (resample == MotelyVectorResampleStream.StackResampleCount)
+            {
+                resampleStream.HighResamplePrngStreams = [];
+            }
+
+            Debug.Assert(resampleStream.HighResamplePrngStreams != null);
+
+            if (resample < resampleStream.HighResamplePrngStreams.Count)
+            {
+                return ref Unsafe.Unbox<MotelyVectorPrngStream>(resampleStream.HighResamplePrngStreams[resample]);
+            }
+
+            object prngStreamObject = new MotelyVectorPrngStream();
+
+            resampleStream.HighResamplePrngStreams.Add(prngStreamObject);
+
+            ref MotelyVectorPrngStream prngStream = ref Unsafe.Unbox<MotelyVectorPrngStream>(prngStreamObject);
+
+            prngStream = CreateResamplePrngStream(key, resample);
+
+            return ref prngStream;
+        }
     }
 }

@@ -23,7 +23,7 @@ public struct LuckyCardFilterDesc() : IMotelySeedFilterDesc<LuckyCardFilterDesc.
 
             for (int i = 0; i < 7; i++)
             {
-                values = searchContext.IteratePrngRandom(ref luckyMoney);
+                values = searchContext.GetNextRandom(ref luckyMoney);
 
                 mask &= Vector512.LessThan(values, Vector512.Create(1d / 25d));
 

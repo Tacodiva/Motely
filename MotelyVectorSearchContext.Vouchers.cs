@@ -5,21 +5,10 @@ using System.Runtime.Intrinsics;
 
 namespace Motely;
 
-public ref struct MotelyVectorVoucherStream(int ante, MotelyVectorPrngStream prngStream)
+public ref struct MotelyVectorVoucherStream(int ante, MotelyVectorResampleStream resampleStream)
 {
-    public const int StackResampleCount = 8;
-
-    [InlineArray(StackResampleCount)]
-    public struct MotelyVoucherResampleStreams
-    {
-        public MotelyVectorPrngStream PrngStream;
-    }
-
     public readonly int Ante = ante;
-    public MotelyVectorPrngStream MainStream = prngStream;
-    public MotelyVoucherResampleStreams ResampleStreams;
-    public int ResampleStreamInitCount;
-    public List<object>? HighResampleStreams;
+    public MotelyVectorResampleStream ResampleStream = resampleStream;
 }
 
 
@@ -29,25 +18,9 @@ ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private MotelyVectorPrngStream CreateVoucherPrngStream(int ante)
-    {
-        return CreatePrngStream(MotelyPrngKeys.Voucher + ante);
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private MotelyVectorPrngStream CreateVoucherResamplePrngStream(int ante, int resample)
-    {
-        return CreatePrngStream(MotelyPrngKeys.Voucher + ante + MotelyPrngKeys.Resample + (resample + 2));
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
     public MotelyVectorVoucherStream CreateVoucherStream(int ante)
     {
-        return new(ante, CreateVoucherPrngStream(ante));
+        return new(ante, CreateResampleStream(MotelyPrngKeys.Voucher + ante));
     }
 
 #if !DEBUG
@@ -55,9 +28,9 @@ ref partial struct MotelyVectorSearchContext
 #endif
     public VectorEnum256<MotelyVoucher> GetAnteFirstVoucher(int ante)
     {
-        MotelyVectorPrngStream prngStream = CreateVoucherPrngStream(ante);
+        MotelyVectorPrngStream prngStream = CreatePrngStream(MotelyPrngKeys.Voucher + ante);
 
-        VectorEnum256<MotelyVoucher> vouchers = new(IteratePrngRandomInt(ref prngStream, 0, MotelyEnum<MotelyVoucher>.ValueCount));
+        VectorEnum256<MotelyVoucher> vouchers = new(GetNextRandomInt(ref prngStream, 0, MotelyEnum<MotelyVoucher>.ValueCount));
         int resampleCount = 0;
 
         while (true)
@@ -71,9 +44,9 @@ ref partial struct MotelyVectorSearchContext
             if (Vector256.EqualsAll(resampleMask, Vector256<int>.Zero))
                 break;
 
-            prngStream = CreateVoucherResamplePrngStream(ante, resampleCount);
+            prngStream = CreateResamplePrngStream(MotelyPrngKeys.Voucher + ante, resampleCount);
 
-            Vector256<int> newVouchers = IteratePrngRandomInt(
+            Vector256<int> newVouchers = GetNextRandomInt(
                 ref prngStream,
                 0, MotelyEnum<MotelyVoucher>.ValueCount,
                 MotelyVectorUtils.ExtendIntMaskToDouble(resampleMask)
@@ -92,9 +65,9 @@ ref partial struct MotelyVectorSearchContext
 #endif
     public VectorEnum256<MotelyVoucher> GetAnteFirstVoucher(int ante, in MotelyVectorRunStateVoucher voucherState)
     {
-        MotelyVectorPrngStream prngStream = CreateVoucherPrngStream(ante);
+        MotelyVectorPrngStream prngStream = CreatePrngStream(MotelyPrngKeys.Voucher + ante);
 
-        VectorEnum256<MotelyVoucher> vouchers = new(IteratePrngRandomInt(ref prngStream, 0, MotelyEnum<MotelyVoucher>.ValueCount));
+        VectorEnum256<MotelyVoucher> vouchers = new(GetNextRandomInt(ref prngStream, 0, MotelyEnum<MotelyVoucher>.ValueCount));
         int resampleCount = 0;
 
         while (true)
@@ -115,9 +88,9 @@ ref partial struct MotelyVectorSearchContext
             if (Vector256.EqualsAll(resampleMask, Vector256<int>.Zero))
                 break;
 
-            prngStream = CreateVoucherResamplePrngStream(ante, resampleCount);
+            prngStream = CreateResamplePrngStream(MotelyPrngKeys.Voucher + ante, resampleCount);
 
-            Vector256<int> newVouchers = IteratePrngRandomInt(
+            Vector256<int> newVouchers = GetNextRandomInt(
                 ref prngStream,
                 0, MotelyEnum<MotelyVoucher>.ValueCount,
                 MotelyVectorUtils.ExtendIntMaskToDouble(resampleMask)
@@ -131,53 +104,9 @@ ref partial struct MotelyVectorSearchContext
         return vouchers;
     }
 
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private ref MotelyVectorPrngStream GetVoucherStreamResamplePrngStream(ref MotelyVectorVoucherStream voucherStream, int resample)
-    {
-
-        if (resample < MotelyVectorVoucherStream.StackResampleCount)
-        {
-            ref MotelyVectorPrngStream prngStream = ref voucherStream.ResampleStreams[resample];
-
-            if (resample == voucherStream.ResampleStreamInitCount)
-            {
-                ++voucherStream.ResampleStreamInitCount;
-                prngStream = CreateVoucherResamplePrngStream(voucherStream.Ante, resample);
-            }
-
-            return ref prngStream;
-        }
-
-        {
-            if (resample == MotelyVectorVoucherStream.StackResampleCount)
-            {
-                voucherStream.HighResampleStreams = [];
-            }
-
-            Debug.Assert(voucherStream.HighResampleStreams != null);
-
-            if (resample < voucherStream.HighResampleStreams.Count)
-            {
-                return ref Unsafe.Unbox<MotelyVectorPrngStream>(voucherStream.HighResampleStreams[resample]);
-            }
-
-            object prngStreamObject = new MotelyVectorPrngStream();
-
-            voucherStream.HighResampleStreams.Add(prngStreamObject);
-
-            ref MotelyVectorPrngStream prngStream = ref Unsafe.Unbox<MotelyVectorPrngStream>(prngStreamObject);
-
-            prngStream = CreateVoucherResamplePrngStream(voucherStream.Ante, resample);
-
-            return ref prngStream;
-        }
-    }
-
     public VectorEnum256<MotelyVoucher> GetNextVoucher(ref MotelyVectorVoucherStream voucherStream, in MotelyVectorRunStateVoucher voucherState)
     {
-        VectorEnum256<MotelyVoucher> vouchers = new(IteratePrngRandomInt(ref voucherStream.MainStream, 0, MotelyEnum<MotelyVoucher>.ValueCount));
+        VectorEnum256<MotelyVoucher> vouchers = new(GetNextRandomInt(ref voucherStream.ResampleStream.InitialPrngStream, 0, MotelyEnum<MotelyVoucher>.ValueCount));
         int resampleCount = 0;
 
         while (true)
@@ -198,8 +127,8 @@ ref partial struct MotelyVectorSearchContext
             if (Vector256.EqualsAll(resampleMask, Vector256<int>.Zero))
                 break;
 
-            Vector256<int> newVouchers = IteratePrngRandomInt(
-                ref GetVoucherStreamResamplePrngStream(ref voucherStream, resampleCount),
+            Vector256<int> newVouchers = GetNextRandomInt(
+                ref GetResamplePrngStream(ref voucherStream.ResampleStream, MotelyPrngKeys.Voucher + voucherStream.Ante, resampleCount),
                 0, MotelyEnum<MotelyVoucher>.ValueCount,
                 MotelyVectorUtils.ExtendIntMaskToDouble(resampleMask)
             );

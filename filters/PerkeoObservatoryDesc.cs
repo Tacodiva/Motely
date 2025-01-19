@@ -10,9 +10,14 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
     public PerkeoObservatoryFilter CreateFilter(ref MotelyFilterCreationContext ctx)
     {
-        ctx.RegisterPseudoRNG("Voucher1");
-        ctx.RegisterPseudoHash("Voucher1_resample1");
-        ctx.RegisterPseudoHash("Voucher1_resample11");
+        ctx.RegisterPseudoRNG("VoucherX");
+        ctx.RegisterPseudoHash("VoucherX_resampleX");
+        ctx.RegisterPseudoHash("VoucherX_resampleXX");
+        ctx.RegisterPseudoHash("shop_packX");
+        ctx.RegisterPseudoHash("soul_TarotX");
+        ctx.RegisterPseudoHash("Tarotat1X");
+        ctx.RegisterPseudoHash("Tarotat1X_resampleX");
+        ctx.RegisterPseudoHash("Tarotat1X_resampleXX");
         return new PerkeoObservatoryFilter();
     }
 
@@ -35,20 +40,49 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
             matching &= VectorEnum256.Equals(vouchers, MotelyVoucher.Observatory);
 
-            return searchContext.SearchIndividualSeeds(matching, (ref MotelySingleSearchContext searchContext) => {
+            return searchContext.SearchIndividualSeeds(matching, (ref MotelySingleSearchContext searchContext) =>
+            {
+                MotelySingleTarotStream tarotStream = default;
 
-                bool matching = searchContext.GetAnteFirstVoucher(1) == MotelyVoucher.Telescope;
+                MotelySingleBoosterPackStream boosterPackStream = searchContext.CreateBoosterPackStream(1, true);
 
-                if (!matching)
-                    throw new UnreachableException();
+                MotelyBoosterPack pack = searchContext.GetNextBoosterPack(ref boosterPackStream);
 
-                MotelySingleRunStateVoucher voucherState = new();
-                voucherState.ActivateVoucher(MotelyVoucher.Telescope);
+                if (pack.GetPackType() == MotelyBoosterPackType.Arcana)
+                {
+                    tarotStream = searchContext.CreateArcanaPackTarotStream(1);
 
-                if (searchContext.GetAnteFirstVoucher(2, voucherState) != MotelyVoucher.Observatory)
-                    throw new UnreachableException();
+                    if (searchContext.GetArcanaPackContents(ref tarotStream, pack.GetPackSize()).Contains(MotelyItemType.Soul))
+                    {
+                        return true;
+                    }
+                }
 
-                return true;
+                boosterPackStream = searchContext.CreateBoosterPackStream(2);
+                bool tarotStreamInit = false;
+
+                for (int i = 0; i < 3; i++)
+                {
+                    pack = searchContext.GetNextBoosterPack(ref boosterPackStream);
+
+                    if (pack.GetPackType() == MotelyBoosterPackType.Arcana)
+                    {
+                        if (!tarotStreamInit)
+                        {
+                            tarotStreamInit = true;
+                            tarotStream = searchContext.CreateArcanaPackTarotStream(2);
+                        }
+
+                        if (searchContext.GetArcanaPackContents(ref tarotStream, pack.GetPackSize()).Contains(MotelyItemType.Soul))
+                        {
+                            // Hello!
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+
             });
         }
     }

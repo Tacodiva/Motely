@@ -1,9 +1,7 @@
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
 namespace Motely;
-
 
 public ref struct MotelyVectorRunStateVoucher
 {

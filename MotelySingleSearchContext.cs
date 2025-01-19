@@ -1,4 +1,5 @@
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Motely;
@@ -6,6 +7,54 @@ namespace Motely;
 public struct MotelySinglePrngStream(double state)
 {
     public double State = state;
+}
+
+public ref struct MotelySingleResampleStream(MotelySinglePrngStream initialPrngStream)
+{
+    public const int StackResampleCount = 16;
+
+    [InlineArray(StackResampleCount)]
+    public struct MotelyResampleStreams
+    {
+        public MotelySinglePrngStream PrngStream;
+    }
+
+    public MotelySinglePrngStream InitialPrngStream = initialPrngStream;
+    public MotelyResampleStreams ResamplePrngStreams;
+    public int ResamplePrngStreamInitCount;
+    public List<object>? HighResamplePrngStreams;
+}
+
+public ref struct MotelySingleItemSet
+{
+    public const int MaxLength = 5;
+
+    [InlineArray(MaxLength)]
+    public struct MotelyItems
+    {
+        public MotelyItem Card;
+    }
+
+    public MotelyItems Items;
+    public int Length;
+
+    public void Append(MotelyItem item)
+    {
+        Items[Length++] = item;
+    }
+
+    public readonly bool Contains(MotelyItemType item)
+    {
+        for (int i = 0; i < Length; i++)
+        {
+            if (Items[i].Type == item)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 public unsafe ref partial struct MotelySingleSearchContext
@@ -61,41 +110,100 @@ public unsafe ref partial struct MotelySingleSearchContext
 #if DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public void IteratePrngStream(ref MotelySinglePrngStream stream)
+    public double GetNextPrngState(ref MotelySinglePrngStream stream)
     {
-        stream.State = IteratePRNG(stream.State);
+        return stream.State = IteratePRNG(stream.State);
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public double IteratePseudoSeed(ref MotelySinglePrngStream stream)
+    public double GetNextPseudoSeed(ref MotelySinglePrngStream stream)
     {
-        IteratePrngStream(ref stream);
-        return (stream.State + _seedHashCache.GetSeedHash(VectorLane)) / 2d;
+        return (GetNextPrngState(ref stream) + _seedHashCache.GetSeedHash(VectorLane)) / 2d;
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public double IteratePrngRandom(ref MotelySinglePrngStream stream)
+    public double GetNextRandom(ref MotelySinglePrngStream stream)
     {
-        return LuaRandom.Random(IteratePseudoSeed(ref stream));
+        return LuaRandom.Random(GetNextPseudoSeed(ref stream));
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public int IteratePrngRandomInt(ref MotelySinglePrngStream stream, int min, int max)
+    public int GetNextRandomInt(ref MotelySinglePrngStream stream, int min, int max)
     {
-        return LuaRandom.RandInt(IteratePseudoSeed(ref stream), min, max);
+        return LuaRandom.RandInt(GetNextPseudoSeed(ref stream), min, max);
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public T IteratePrngRandElement<T>(ref MotelySinglePrngStream stream, T[] choices)
+    public T GetNextRandomElement<T>(ref MotelySinglePrngStream stream, T[] choices)
     {
-        return choices[IteratePrngRandomInt(ref stream, 0, choices.Length)];
+        return choices[GetNextRandomInt(ref stream, 0, choices.Length)];
     }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private MotelySinglePrngStream CreateResamplePrngStream(string key, int resample)
+    {
+        return CreatePrngStream(key + MotelyPrngKeys.Resample + (resample + 2));
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private MotelySingleResampleStream CreateResampleStream(string key)
+    {
+        return new(CreatePrngStream(key));
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private ref MotelySinglePrngStream GetResamplePrngStream(ref MotelySingleResampleStream resampleStream, string key, int resample)
+    {
+        if (resample < MotelySingleResampleStream.StackResampleCount)
+        {
+            ref MotelySinglePrngStream prngStream = ref resampleStream.ResamplePrngStreams[resample];
+
+            if (resample == resampleStream.ResamplePrngStreamInitCount)
+            {
+                ++resampleStream.ResamplePrngStreamInitCount;
+                prngStream = CreateResamplePrngStream(key, resample);
+            }
+
+            return ref prngStream;
+        }
+        else
+        {
+            if (resample == MotelySingleResampleStream.StackResampleCount)
+            {
+                resampleStream.HighResamplePrngStreams = [];
+            }
+
+            Debug.Assert(resampleStream.HighResamplePrngStreams != null);
+
+            if (resample < resampleStream.HighResamplePrngStreams.Count)
+            {
+                return ref Unsafe.Unbox<MotelySinglePrngStream>(resampleStream.HighResamplePrngStreams[resample]);
+            }
+
+            object prngStreamObject = new MotelySinglePrngStream();
+
+            resampleStream.HighResamplePrngStreams.Add(prngStreamObject);
+
+            ref MotelySinglePrngStream prngStream = ref Unsafe.Unbox<MotelySinglePrngStream>(prngStreamObject);
+
+            prngStream = CreateResamplePrngStream(key, resample);
+
+            return ref prngStream;
+        }
+    }
+
 }

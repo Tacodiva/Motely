@@ -131,7 +131,7 @@ public unsafe sealed class MotelySearch<TFilter>
         }
     }
 
-    private const int BatchCharacters = 3;
+    private const int BatchCharacters = 4;
     private readonly static int MaxBatch = (int)Math.Pow(Motely.SeedDigits.Length, BatchCharacters);
     private readonly static int SeedsPerBatch = (int)Math.Pow(Motely.SeedDigits.Length, Motely.MaxSeedLength - BatchCharacters);
 
@@ -181,8 +181,7 @@ public unsafe sealed class MotelySearch<TFilter>
             threads[i] = new(this, i);
         }
 
-        // _batchIndex = -1;
-        _batchIndex = 4;
+        _batchIndex = -1;
 
         foreach (MotelySearchThread thread in threads)
             thread.Thread.Start();

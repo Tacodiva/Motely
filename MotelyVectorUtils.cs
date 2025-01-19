@@ -58,6 +58,36 @@ public unsafe static class MotelyVectorUtils
         return Vector512.Create(low, high).As<long, TTo>();
     }
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector256<float> ShrinkDoubleMaskToFloat(in Vector512<double> smallMask)
+        => Shrink64MaskTo32<double, float>(smallMask);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector256<float> ShrinkLongMaskToFloat(in Vector512<long> smallMask)
+        => Shrink64MaskTo32<long, float>(smallMask);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector256<int> ShrinkDoubleMaskToInt(in Vector512<double> smallMask)
+        => Shrink64MaskTo32<double, int>(smallMask);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector256<int> ShrinkLongMaskToInt(in Vector512<long> smallMask)
+        => Shrink64MaskTo32<long, int>(smallMask);
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static Vector256<TTo> Shrink64MaskTo32<TFrom, TTo>(in Vector512<TFrom> smallMask)
+        where TFrom : unmanaged
+        where TTo : unmanaged
+    {
+        if (sizeof(TTo) != 4) throw new InvalidOperationException();
+        if (sizeof(TFrom) != 8) throw new InvalidOperationException();
+
+        return Avx512F.ConvertToVector256Int32(smallMask.AsUInt64()).As<int, TTo>();
+    }
+
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
