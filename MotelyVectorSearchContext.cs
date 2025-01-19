@@ -1,4 +1,5 @@
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
@@ -9,11 +10,49 @@ public struct MotelyVectorPrngStream(Vector512<double> state)
     public Vector512<double> State = state;
 }
 
-public unsafe ref partial struct MotelyVectorSearchContext(Vector512<double>* seedHashes, int* seedHashesLookup)
+public delegate bool MotelyIndividualSeedSearcher(ref MotelySingleSearchContext searchContext);
+
+public unsafe ref partial struct MotelyVectorSearchContext
 {
-    private readonly int* _seedHashesLookup = seedHashesLookup;
-    // A map of pseudohash key length => seed hash up to that point
-    private readonly Vector512<double>* _seedHashes = seedHashes;
+
+    // QKME1116 ???
+
+    private SeedHashCache _seedHashCache;
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    internal MotelyVectorSearchContext(in SeedHashCache seedHashCache)
+    {
+        _seedHashCache = seedHashCache;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public VectorMask SearchIndividualSeeds(VectorMask mask, MotelyIndividualSeedSearcher searcher)
+    {
+        uint results = 0;
+
+        uint maskShift = mask.Value;
+
+        for (int lane = 0; lane < Vector512<double>.Count; lane++)
+        {
+            if ((maskShift & 1) != 0)
+            {
+                MotelySingleSearchContext singleSearchContext = new(lane, _seedHashCache);
+
+                bool success = searcher(ref singleSearchContext);
+
+                if (success)
+                {
+                    results |= 1u << lane;
+                }
+            }
+
+            maskShift >>= 1;
+        }
+
+        return new(results);
+    }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -23,7 +62,7 @@ public unsafe ref partial struct MotelyVectorSearchContext(Vector512<double>* se
 #if MOTELY_SAFE
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(key.Length, Motely.MaxPseudoHashKeyLength);
 #endif
-        Vector512<double> calcVector = _seedHashes[_seedHashesLookup[key.Length]];
+        Vector512<double> calcVector = _seedHashCache.GetPartialHashVector(key.Length);
 
         for (int i = key.Length - 1; i >= 0; i--)
         {
@@ -90,7 +129,7 @@ public unsafe ref partial struct MotelyVectorSearchContext(Vector512<double>* se
     public Vector512<double> IteratePseudoSeed(ref MotelyVectorPrngStream stream)
     {
         IteratePrngStream(ref stream);
-        return (stream.State + _seedHashes[0]) / Vector512.Create<double>(2);
+        return (stream.State + _seedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
     }
 
 #if !DEBUG
@@ -99,7 +138,7 @@ public unsafe ref partial struct MotelyVectorSearchContext(Vector512<double>* se
     public Vector512<double> IteratePseudoSeed(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
     {
         IteratePrngStream(ref stream, mask);
-        return (stream.State + _seedHashes[0]) / Vector512.Create<double>(2);
+        return (stream.State + _seedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
     }
 
 #if !DEBUG
@@ -107,7 +146,7 @@ public unsafe ref partial struct MotelyVectorSearchContext(Vector512<double>* se
 #endif
     public Vector512<double> IteratePrngRandom(ref MotelyVectorPrngStream stream)
     {
-        return VectorLuaRandomSingle.Random(IteratePseudoSeed(ref stream));
+        return VectorLuaRandom.Random(IteratePseudoSeed(ref stream));
     }
 
 #if !DEBUG
@@ -115,7 +154,7 @@ public unsafe ref partial struct MotelyVectorSearchContext(Vector512<double>* se
 #endif
     public Vector512<double> IteratePrngRandom(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
     {
-        return VectorLuaRandomSingle.Random(IteratePseudoSeed(ref stream, mask));
+        return VectorLuaRandom.Random(IteratePseudoSeed(ref stream, mask));
     }
 
 #if !DEBUG
@@ -123,7 +162,7 @@ public unsafe ref partial struct MotelyVectorSearchContext(Vector512<double>* se
 #endif
     public Vector256<int> IteratePrngRandomInt(ref MotelyVectorPrngStream stream, int min, int max)
     {
-        return VectorLuaRandomSingle.RandInt(IteratePseudoSeed(ref stream), min, max);
+        return VectorLuaRandom.RandInt(IteratePseudoSeed(ref stream), min, max);
     }
 
 #if !DEBUG
@@ -131,7 +170,7 @@ public unsafe ref partial struct MotelyVectorSearchContext(Vector512<double>* se
 #endif
     public Vector256<int> IteratePrngRandomInt(ref MotelyVectorPrngStream stream, int min, int max, in Vector512<double> mask)
     {
-        return VectorLuaRandomSingle.RandInt(IteratePseudoSeed(ref stream), min, max);
+        return VectorLuaRandom.RandInt(IteratePseudoSeed(ref stream), min, max);
     }
 
 #if !DEBUG

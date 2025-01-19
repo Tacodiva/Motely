@@ -1,13 +1,8 @@
 
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-
 namespace Motely;
 
 public class Motely
 {
-    //RDNCZ58P
-
     public const int MaxPseudoHashKeyLength = 20;
 
     // public static readonly char[] SeedDigits = [.. "CPRDNZ58AB"];
@@ -35,34 +30,6 @@ public class Motely
 
     public const int ItemEditionMask = 0b111;
     public const int ItemEditionOffset = 23;
-
-    public static double PseudoHash(in MotelySeed seed)
-        => PseudoHash("", seed);
-
-    public static double PseudoHash(string prefix, in MotelySeed seed)
-    {
-        int prefixLength = prefix.Length;
-
-        double num = 1;
-
-        for (int i = seed.Length - 1; i >= 0; i--)
-        {
-            num = ((1.1239285023 / num) * seed.Characters[i] * Math.PI + Math.PI * (i + prefixLength + 1)) % 1;
-        }
-
-        for (int i = prefixLength - 1; i >= 0; i--)
-        {
-            num = ((1.1239285023 / num) * prefix[i] * Math.PI + Math.PI * (i + 1)) % 1;
-        }
-
-        return num;
-    }
-
-    public static double PseudoRandom(double seed)
-    {
-        return new LuaRandom(seed).Random();
-    }
-
 }
 
 public enum MotelyItemSeal

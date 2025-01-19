@@ -57,4 +57,22 @@ public unsafe static class MotelyVectorUtils
 
         return Vector512.Create(low, high).As<long, TTo>();
     }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static uint VectorMaskToIntMask<T>(in Vector256<T> vector) where T : unmanaged
+    {
+        if (sizeof(T) != 4) throw new InvalidOperationException();
+        return Vector256.ExtractMostSignificantBits(vector);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public static uint VectorMaskToIntMask<T>(in Vector512<T> vector) where T : unmanaged
+    {
+        if (sizeof(T) != 8) throw new InvalidOperationException();
+        return (uint)Vector512.ExtractMostSignificantBits(vector);
+    }
 }

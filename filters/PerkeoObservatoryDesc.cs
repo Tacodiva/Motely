@@ -1,4 +1,5 @@
 
+using System.Diagnostics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
@@ -18,13 +19,13 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
     public struct PerkeoObservatoryFilter() : IMotelySeedFilter
     {
 
-        public readonly Vector512<double> Filter(ref MotelyVectorSearchContext searchContext)
+        public readonly VectorMask Filter(ref MotelyVectorSearchContext searchContext)
         {
             VectorEnum256<MotelyVoucher> vouchers = searchContext.GetAnteFirstVoucher(1);
 
-            Vector256<int> matching = VectorEnum256.Equals(vouchers, MotelyVoucher.Telescope);
+            VectorMask matching = VectorEnum256.Equals(vouchers, MotelyVoucher.Telescope);
 
-            if (Vector256.EqualsAll(matching, Vector256<int>.Zero))
+            if (matching.IsAllFalse())
                 return Vector512<double>.Zero;
 
             MotelyVectorRunStateVoucher voucherState = new();
@@ -34,7 +35,21 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
             matching &= VectorEnum256.Equals(vouchers, MotelyVoucher.Observatory);
 
-            return MotelyVectorUtils.ExtendIntMaskToDouble(matching);
+            return searchContext.SearchIndividualSeeds(matching, (ref MotelySingleSearchContext searchContext) => {
+
+                bool matching = searchContext.GetAnteFirstVoucher(1) == MotelyVoucher.Telescope;
+
+                if (!matching)
+                    throw new UnreachableException();
+
+                MotelySingleRunStateVoucher voucherState = new();
+                voucherState.ActivateVoucher(MotelyVoucher.Telescope);
+
+                if (searchContext.GetAnteFirstVoucher(2, voucherState) != MotelyVoucher.Observatory)
+                    throw new UnreachableException();
+
+                return true;
+            });
         }
     }
 }

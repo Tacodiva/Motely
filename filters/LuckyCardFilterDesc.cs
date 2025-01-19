@@ -14,12 +14,11 @@ public struct LuckyCardFilterDesc() : IMotelySeedFilterDesc<LuckyCardFilterDesc.
     public struct LuckyCardFilter() : IMotelySeedFilter
     {
 
-        public Vector512<double> Filter(ref MotelyVectorSearchContext searchContext)
+        public VectorMask Filter(ref MotelyVectorSearchContext searchContext)
         {
-
             MotelyVectorPrngStream luckyMoney = searchContext.CreatePrngStream("lucky_money");
 
-            Vector512<double> mask = Vector512<double>.AllBitsSet;
+            VectorMask mask = VectorMask.AllBitsSet;
             Vector512<double> values;
 
             for (int i = 0; i < 7; i++)
@@ -28,7 +27,7 @@ public struct LuckyCardFilterDesc() : IMotelySeedFilterDesc<LuckyCardFilterDesc.
 
                 mask &= Vector512.LessThan(values, Vector512.Create(1d / 25d));
 
-                if (Vector512.EqualsAll(mask, Vector512<double>.Zero))
+                if (mask.IsAllFalse())
                 {
                     break;
                 }

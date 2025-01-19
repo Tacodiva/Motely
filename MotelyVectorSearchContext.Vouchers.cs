@@ -31,7 +31,7 @@ ref partial struct MotelyVectorSearchContext
 #endif
     private MotelyVectorPrngStream CreateVoucherPrngStream(int ante)
     {
-        return CreatePrngStream("Voucher" + ante);
+        return CreatePrngStream(MotelyPrngKeys.Voucher + ante);
     }
 
 #if !DEBUG
@@ -39,7 +39,7 @@ ref partial struct MotelyVectorSearchContext
 #endif
     private MotelyVectorPrngStream CreateVoucherResamplePrngStream(int ante, int resample)
     {
-        return CreatePrngStream("Voucher" + ante + "_resample" + (resample + 2));
+        return CreatePrngStream(MotelyPrngKeys.Voucher + ante + MotelyPrngKeys.Resample + (resample + 2));
     }
 
 #if !DEBUG
@@ -174,7 +174,6 @@ ref partial struct MotelyVectorSearchContext
             return ref prngStream;
         }
     }
-
 
     public VectorEnum256<MotelyVoucher> GetNextVoucher(ref MotelyVectorVoucherStream voucherStream, in MotelyVectorRunStateVoucher voucherState)
     {

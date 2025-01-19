@@ -1,5 +1,4 @@
 
-using System.Data;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -34,7 +33,7 @@ public interface IMotelySeedFilterDesc<TFilter> where TFilter : struct, IMotelyS
 
 public interface IMotelySeedFilter
 {
-    public Vector512<double> Filter(ref MotelyVectorSearchContext searchContext);
+    public VectorMask Filter(ref MotelyVectorSearchContext searchContext);
 }
 
 public sealed class MotelySearchSettings<TFilter>(IMotelySeedFilterDesc<TFilter> filterDesc)
@@ -54,6 +53,51 @@ public sealed class MotelySearchSettings<TFilter>(IMotelySeedFilterDesc<TFilter>
     {
         new MotelySearch<TFilter>(this).Search();
     });
+}
+
+#if !DEBUG
+[method:MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+internal unsafe struct SeedHashCache(Vector512<double>* seedHashes, int* seedHashesLookup)
+{
+    // A map of pseudohash key length => cache index
+    public readonly int* SeedHashesLookup = seedHashesLookup;
+
+    // A list of all the cached seed hashs
+    public readonly Vector512<double>* SeedHashes = seedHashes;
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public Vector512<double> GetSeedHashVector()
+    {
+        Debug.Assert(SeedHashesLookup[0] == 0);
+        return SeedHashes[0];
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public double GetSeedHash(int lane)
+    {
+        return GetSeedHashVector()[lane];
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public Vector512<double> GetPartialHashVector(int keyLength)
+    {
+        return SeedHashes[SeedHashesLookup[keyLength]];
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public double GetPartialHash(int keyLength, int lane)
+    {
+        return GetPartialHashVector(keyLength)[lane];
+    }
 }
 
 public unsafe sealed class MotelySearch<TFilter>
@@ -250,7 +294,7 @@ public unsafe sealed class MotelySearch<TFilter>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         [SkipLocalsInit]
-        private void SearchVector(int i, Vector512<double> seedDigitVector, Vector512<double>* nums, int numsChannel)
+        private void SearchVector(int i, Vector512<double> seedDigitVector, Vector512<double>* nums, int numsLaneIndex)
         {
             Vector512<double>* hashes = stackalloc Vector512<double>[Search._pseudoHashKeyLengthCount];
 
@@ -258,7 +302,7 @@ public unsafe sealed class MotelySearch<TFilter>
             {
                 int pseudohashKeyLength = Search._pseudoHashKeyLengths[pseudohashKeyIdx];
 
-                Vector512<double> calcVector = Vector512.Divide(Vector512.Create(1.1239285023), ((double*)&nums[pseudohashKeyIdx])[numsChannel]);
+                Vector512<double> calcVector = Vector512.Divide(Vector512.Create(1.1239285023), ((double*)&nums[pseudohashKeyIdx])[numsLaneIndex]);
 
                 calcVector = Vector512.Multiply(calcVector, seedDigitVector);
 
@@ -273,16 +317,16 @@ public unsafe sealed class MotelySearch<TFilter>
 
             if (i == 0)
             {
-                MotelyVectorSearchContext searchContext = new(hashes, Search._pseudoHashReverseMap);
-                Vector512<double> results = Search._filter.Filter(ref searchContext);
+                MotelyVectorSearchContext searchContext = new(new(hashes, Search._pseudoHashReverseMap));
+                uint successMask = Search._filter.Filter(ref searchContext).Value;
 
-                if (!Vector512.EqualsAll(results, Vector512<double>.Zero))
+                if (successMask != 0)
                 {
-                    for (int channel = 0; channel < Vector512<double>.Count; channel++)
+                    for (int lane = 0; lane < Vector512<double>.Count; lane++)
                     {
-                        if (results[channel] != 0)
+                        if ((successMask & 1) != 0)
                         {
-                            _digits[0] = (char)seedDigitVector[channel];
+                            _digits[0] = (char)seedDigitVector[lane];
 
                             string seed = "";
 
@@ -294,20 +338,22 @@ public unsafe sealed class MotelySearch<TFilter>
 
                             FancyConsole.WriteLine($"{seed}");
                         }
+
+                        successMask >>= 1;
                     }
                 }
             }
             else
             {
-                for (int channel = 0; channel < Vector512<double>.Count; channel++)
+                for (int lane = 0; lane < Vector512<double>.Count; lane++)
                 {
-                    if (seedDigitVector[channel] == 0) break;
+                    if (seedDigitVector[lane] == 0) break;
 
-                    _digits[i] = (char)seedDigitVector[channel];
+                    _digits[i] = (char)seedDigitVector[lane];
 
                     for (int vectorIndex = 0; vectorIndex < SeedDigitVectors.Length; vectorIndex++)
                     {
-                        SearchVector(i - 1, SeedDigitVectors[vectorIndex], hashes, channel);
+                        SearchVector(i - 1, SeedDigitVectors[vectorIndex], hashes, lane);
                     }
                 }
             }
