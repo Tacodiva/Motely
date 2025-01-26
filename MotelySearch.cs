@@ -7,21 +7,54 @@ using System.Runtime.Intrinsics;
 namespace Motely;
 
 
-public ref struct MotelyFilterCreationContext()
+public ref struct MotelyFilterCreationContext
 {
 
-    private readonly HashSet<int> _pseudohashKeyLengths = new();
-    public IReadOnlyCollection<int> PseudohashKeyLengths => _pseudohashKeyLengths;
+    private readonly HashSet<int> _cachedPseudohashKeyLengths;
+    public readonly IReadOnlyCollection<int> CachedPseudohashKeyLengths => _cachedPseudohashKeyLengths;
 
-    public readonly void RegisterPseudoHash(string key)
+    public MotelyFilterCreationContext()
     {
-        _pseudohashKeyLengths.Add(key.Length);
+        _cachedPseudohashKeyLengths = [0];
     }
 
-    public readonly void RegisterPseudoRNG(string key)
+    public readonly void RemoveCachedPseudoHash(int keyLength)
     {
-        _pseudohashKeyLengths.Add(0);
-        RegisterPseudoHash(key);
+        _cachedPseudohashKeyLengths.Remove(keyLength);
+    }
+
+    public readonly void RemoveCachedPseudoHash(string key)
+    {
+        RemoveCachedPseudoHash(key.Length);
+    }
+
+    public readonly void CachePseudoHash(int keyLength)
+    {
+        _cachedPseudohashKeyLengths.Add(keyLength);
+    }
+
+    public readonly void CachePseudoHash(string key)
+    {
+        CachePseudoHash(key.Length);
+    }
+
+    private readonly void CacheResampleStream(string key)
+    {
+        CachePseudoHash(key);
+        CachePseudoHash(key + MotelyPrngKeys.Resample + "X");
+        // We don't cache resamples > 8 because they'd use an extra digit
+    }
+
+    public readonly void CacheBoosterPackStream(int ante) => CachePseudoHash(MotelyPrngKeys.ShopPack + ante);
+
+    public readonly void CacheTagStream(int ante) => CachePseudoHash(MotelyPrngKeys.Tags + ante);
+
+    public readonly void CacheVoucherStream(int ante) => CacheResampleStream(MotelyPrngKeys.Voucher + ante);
+
+    public readonly void CacheTarotStream(int ante)
+    {
+        CacheResampleStream(MotelyPrngKeys.Tarot + MotelyPrngKeys.ArcanaPack + ante);
+        CachePseudoHash(MotelyPrngKeys.Soul + MotelyPrngKeys.Tarot + ante);
     }
 
 }
@@ -69,7 +102,15 @@ internal unsafe struct SeedHashCache(Vector512<double>* seedHashes, int* seedHas
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector512<double> GetSeedHashVector()
+    public readonly bool HasPartialHash(int keyLength)
+    {
+        return keyLength < Motely.MaxCachedPseudoHashKeyLength && SeedHashesLookup[keyLength] != -1;
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public readonly Vector512<double> GetSeedHashVector()
     {
         Debug.Assert(SeedHashesLookup[0] == 0);
         return SeedHashes[0];
@@ -78,7 +119,7 @@ internal unsafe struct SeedHashCache(Vector512<double>* seedHashes, int* seedHas
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public double GetSeedHash(int lane)
+    public readonly double GetSeedHash(int lane)
     {
         return GetSeedHashVector()[lane];
     }
@@ -86,7 +127,7 @@ internal unsafe struct SeedHashCache(Vector512<double>* seedHashes, int* seedHas
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector512<double> GetPartialHashVector(int keyLength)
+    public readonly Vector512<double> GetPartialHashVector(int keyLength)
     {
         return SeedHashes[SeedHashesLookup[keyLength]];
     }
@@ -94,7 +135,7 @@ internal unsafe struct SeedHashCache(Vector512<double>* seedHashes, int* seedHas
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public double GetPartialHash(int keyLength, int lane)
+    public readonly double GetPartialHash(int keyLength, int lane)
     {
         return GetPartialHashVector(keyLength)[lane];
     }
@@ -152,7 +193,7 @@ public unsafe sealed class MotelySearch<TFilter>
         MotelyFilterCreationContext filterCreationContext = new();
         _filter = settings.FilterDesc.CreateFilter(ref filterCreationContext);
 
-        int[] pseudohashKeyLengths = filterCreationContext.PseudohashKeyLengths.ToArray();
+        int[] pseudohashKeyLengths = filterCreationContext.CachedPseudohashKeyLengths.ToArray();
         _pseudoHashKeyLengthCount = pseudohashKeyLengths.Length;
         _pseudoHashKeyLengths = (int*)Marshal.AllocHGlobal(sizeof(int) * _pseudoHashKeyLengthCount);
 
@@ -161,7 +202,10 @@ public unsafe sealed class MotelySearch<TFilter>
             _pseudoHashKeyLengths[i] = pseudohashKeyLengths[i];
         }
 
-        _pseudoHashReverseMap = (int*)Marshal.AllocHGlobal(sizeof(int) * Motely.MaxPseudoHashKeyLength);
+        _pseudoHashReverseMap = (int*)Marshal.AllocHGlobal(sizeof(int) * Motely.MaxCachedPseudoHashKeyLength);
+
+        for (int i = 0; i < Motely.MaxCachedPseudoHashKeyLength; i++)
+            _pseudoHashReverseMap[i] = -1;
 
         for (int i = 0; i < _pseudoHashKeyLengthCount; i++)
         {
@@ -316,7 +360,12 @@ public unsafe sealed class MotelySearch<TFilter>
 
             if (i == 0)
             {
-                MotelyVectorSearchContext searchContext = new(new(hashes, Search._pseudoHashReverseMap));
+                MotelySearchContextParams searchContextParams = new(
+                    new(hashes, Search._pseudoHashReverseMap),
+                    Motely.MaxSeedLength, &_digits[1], seedDigitVector
+                );
+
+                MotelyVectorSearchContext searchContext = new(ref searchContextParams);
                 uint successMask = Search._filter.Filter(ref searchContext).Value;
 
                 if (successMask != 0)
@@ -341,6 +390,8 @@ public unsafe sealed class MotelySearch<TFilter>
                         successMask >>= 1;
                     }
                 }
+
+                // Environment.Exit(0);
             }
             else
             {

@@ -10,14 +10,9 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
     public PerkeoObservatoryFilter CreateFilter(ref MotelyFilterCreationContext ctx)
     {
-        ctx.RegisterPseudoRNG("VoucherX");
-        ctx.RegisterPseudoHash("VoucherX_resampleX");
-        ctx.RegisterPseudoHash("VoucherX_resampleXX");
-        ctx.RegisterPseudoHash("shop_packX");
-        ctx.RegisterPseudoHash("soul_TarotX");
-        ctx.RegisterPseudoHash("Tarotat1X");
-        ctx.RegisterPseudoHash("Tarotat1X_resampleX");
-        ctx.RegisterPseudoHash("Tarotat1X_resampleXX");
+        ctx.CacheVoucherStream(1);
+        ctx.CacheVoucherStream(2);
+
         return new PerkeoObservatoryFilter();
     }
 
@@ -54,7 +49,7 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
                     if (searchContext.GetArcanaPackContents(ref tarotStream, pack.GetPackSize()).Contains(MotelyItemType.Soul))
                     {
-                        return true;
+                        // return true;
                     }
                 }
 
@@ -75,8 +70,7 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
                         if (searchContext.GetArcanaPackContents(ref tarotStream, pack.GetPackSize()).Contains(MotelyItemType.Soul))
                         {
-                            // Hello!
-                            return true;
+                            // return true;
                         }
                     }
                 }

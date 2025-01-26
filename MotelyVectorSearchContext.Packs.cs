@@ -9,6 +9,14 @@ public struct MotelyVectorBoosterPackStream(MotelyVectorPrngStream prngStream, b
 
 ref partial struct MotelyVectorSearchContext
 {
+    public MotelyVectorBoosterPackStream CreateBoosterPackStreamCached(int ante)
+    => CreateBoosterPackStream(ante, ante != 1);
+
+    public MotelyVectorBoosterPackStream CreateBoosterPackStreamCached(int ante, bool generatedFirstPack)
+    {
+        return new(CreatePrngStreamCached(MotelyPrngKeys.ShopPack + ante), generatedFirstPack);
+    }
+
     public MotelyVectorBoosterPackStream CreateBoosterPackStream(int ante)
         => CreateBoosterPackStream(ante, ante != 1);
 

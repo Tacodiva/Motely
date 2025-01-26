@@ -8,7 +8,7 @@ public struct NaNSeedFilterDesc(string pseudoHashKey) : IMotelySeedFilterDesc<Na
 
     public NaNSeedFilter CreateFilter(ref MotelyFilterCreationContext ctx)
     {
-        ctx.RegisterPseudoHash(PseudoHashKey);
+        ctx.CachePseudoHash(PseudoHashKey);
         return new NaNSeedFilter(PseudoHashKey);
     }
 

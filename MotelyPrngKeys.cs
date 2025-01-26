@@ -10,4 +10,5 @@ public static class MotelyPrngKeys
     public const string Tarot = "Tarot";
     public const string ArcanaPack = "ar1";
     public const string Soul = "soul_";
+    public const string Tags = "Tag";
 }

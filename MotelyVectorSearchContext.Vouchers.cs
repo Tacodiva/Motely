@@ -18,6 +18,14 @@ ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+    public MotelyVectorVoucherStream CreateVoucherStreamCached(int ante)
+    {
+        return new(ante, CreateResampleStreamCached(MotelyPrngKeys.Voucher + ante));
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public MotelyVectorVoucherStream CreateVoucherStream(int ante)
     {
         return new(ante, CreateResampleStream(MotelyPrngKeys.Voucher + ante));

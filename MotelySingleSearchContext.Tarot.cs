@@ -16,6 +16,18 @@ public ref struct MotelySingleTarotStream(int ante, bool soulable, MotelySingleR
 
 ref partial struct MotelySingleSearchContext
 {
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public MotelySingleTarotStream CreateArcanaPackTarotStreamCached(int ante)
+    {
+        return new(ante, true,
+            CreateResampleStreamCached(MotelyPrngKeys.Tarot + MotelyPrngKeys.ArcanaPack + ante),
+            CreatePrngStreamCached(MotelyPrngKeys.Soul + MotelyPrngKeys.Tarot + ante)
+        );
+    }
+
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -28,7 +40,8 @@ ref partial struct MotelySingleSearchContext
     }
 
     public MotelySingleItemSet GetArcanaPackContents(ref MotelySingleTarotStream tarotStream, MotelyBoosterPackSize size)
-        => GetArcanaPackContents(ref tarotStream, size switch {
+        => GetArcanaPackContents(ref tarotStream, size switch
+        {
             MotelyBoosterPackSize.Normal => 3,
             MotelyBoosterPackSize.Jumbo => 5,
             MotelyBoosterPackSize.Mega => 5,

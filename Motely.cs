@@ -5,7 +5,7 @@ namespace Motely;
 
 public class Motely
 {
-    public const int MaxPseudoHashKeyLength = 20;
+    public const int MaxCachedPseudoHashKeyLength = 20;
 
     // public static readonly char[] SeedDigits = [.. "CPRDNZ58AB"];
     public static readonly char[] SeedDigits = [.. "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
@@ -35,6 +35,34 @@ public class Motely
     public const int BoosterPackTypeOffset = 2;
     public const int BoosterPackSizeMask = 0b11;
 
+}
+
+public enum MotelyTag
+{
+    UncommonTag,
+    RareTag,
+    NegativeTag,
+    FoilTag,
+    HolographicTag,
+    PolychromeTag,
+    InvestmentTag,
+    VoucherTag,
+    BossTag,
+    StandardTag,
+    CharmTag,
+    MeteorTag,
+    BuffoonTag,
+    HandyTag,
+    GarbageTag,
+    EtherealTag,
+    CouponTag,
+    DoubleTag,
+    JuggleTag,
+    D6Tag,
+    TopupTag,
+    SpeedTag,
+    OrbitalTag,
+    EconomyTag
 }
 
 public enum MotelyItemSeal

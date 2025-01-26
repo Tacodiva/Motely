@@ -9,6 +9,14 @@ public struct MotelySingleBoosterPackStream(MotelySinglePrngStream prngStream, b
 
 ref partial struct MotelySingleSearchContext
 {
+    public MotelySingleBoosterPackStream CreateBoosterPackStreamCached(int ante)
+    => CreateBoosterPackStreamCached(ante, ante != 1);
+
+    public MotelySingleBoosterPackStream CreateBoosterPackStreamCached(int ante, bool generatedFirstPack)
+    {
+        return new(CreatePrngStreamCached(MotelyPrngKeys.ShopPack + ante), generatedFirstPack);
+    }
+
     public MotelySingleBoosterPackStream CreateBoosterPackStream(int ante)
         => CreateBoosterPackStream(ante, ante != 1);
 

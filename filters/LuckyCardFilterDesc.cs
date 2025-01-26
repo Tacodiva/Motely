@@ -7,7 +7,7 @@ public struct LuckyCardFilterDesc() : IMotelySeedFilterDesc<LuckyCardFilterDesc.
 
     public LuckyCardFilter CreateFilter(ref MotelyFilterCreationContext ctx)
     {
-        ctx.RegisterPseudoRNG("lucky_money");
+        ctx.CachePseudoHash("lucky_money");
         return new LuckyCardFilter();
     }
 

@@ -14,6 +14,14 @@ ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+    public MotelySingleVoucherStream CreateVoucherStreamCached(int ante)
+    {
+        return new(ante, CreateResampleStreamCached(MotelyPrngKeys.Voucher + ante));
+    }
+    
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public MotelySingleVoucherStream CreateVoucherStream(int ante)
     {
         return new(ante, CreateResampleStream(MotelyPrngKeys.Voucher + ante));
