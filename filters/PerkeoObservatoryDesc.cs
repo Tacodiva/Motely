@@ -1,7 +1,5 @@
 
-using System.Diagnostics;
 using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 
 namespace Motely;
 
@@ -49,6 +47,7 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
                     if (searchContext.GetArcanaPackContents(ref tarotStream, pack.GetPackSize()).Contains(MotelyItemType.Soul))
                     {
+                        return false;
                         // return true;
                     }
                 }

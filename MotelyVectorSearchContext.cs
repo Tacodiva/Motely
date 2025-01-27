@@ -55,6 +55,26 @@ public unsafe ref partial struct MotelyVectorSearchContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public VectorMask SearchIndividualSeeds(MotelyIndividualSeedSearcher searcher)
+    {
+        uint results = 0;
+
+        for (int lane = 0; lane < Vector512<double>.Count; lane++)
+        {
+            MotelySingleSearchContext singleSearchContext = new(ref _params, lane);
+
+            bool success = searcher(ref singleSearchContext);
+
+            if (success)
+            {
+                results |= 1u << lane;
+            }
+        }
+
+        return new(results);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VectorMask SearchIndividualSeeds(VectorMask mask, MotelyIndividualSeedSearcher searcher)
     {
         uint results = 0;
@@ -222,6 +242,14 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+    public Vector512<double> IteratePseudoSeed(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
+    {
+        return (GetNextPrngState(ref stream, mask) + SeedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public Vector512<double> GetNextPseudoSeed(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
     {
         return (GetNextPrngState(ref stream, mask) + SeedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
@@ -256,7 +284,7 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #endif
     public Vector256<int> GetNextRandomInt(ref MotelyVectorPrngStream stream, int min, int max, in Vector512<double> mask)
     {
-        return VectorLuaRandom.RandInt(IteratePseudoSeed(ref stream), min, max);
+        return VectorLuaRandom.RandInt(IteratePseudoSeed(ref stream, mask), min, max);
     }
 
 #if !DEBUG

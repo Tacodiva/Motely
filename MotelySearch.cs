@@ -54,7 +54,7 @@ public ref struct MotelyFilterCreationContext
     public readonly void CacheTarotStream(int ante)
     {
         CacheResampleStream(MotelyPrngKeys.Tarot + MotelyPrngKeys.ArcanaPack + ante);
-        CachePseudoHash(MotelyPrngKeys.Soul + MotelyPrngKeys.Tarot + ante);
+        CachePseudoHash(MotelyPrngKeys.TerrotSoul + MotelyPrngKeys.Tarot + ante);
     }
 
 }
@@ -226,6 +226,7 @@ public unsafe sealed class MotelySearch<TFilter>
         }
 
         _batchIndex = -1;
+        // _batchIndex = 0;
 
         foreach (MotelySearchThread thread in threads)
             thread.Thread.Start();

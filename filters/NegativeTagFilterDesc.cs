@@ -19,11 +19,28 @@ public struct NegativeTagFilterDesc() : IMotelySeedFilterDesc<NegativeTagFilterD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public VectorMask Filter(ref MotelyVectorSearchContext searchContext)
         {
+            // return searchContext.SearchIndividualSeeds((ref MotelySingleSearchContext searchContext) =>
+            // {
+            //     MotelySingleTagStream tagStream;
 
+            //     for (int ante = 2; ante <= 4; ante++)
+            //     {
+            //         tagStream = searchContext.CreateTagStream(ante);
+
+            //         // Small blind
+            //         if (searchContext.GetNextTag(ref tagStream) != MotelyTag.NegativeTag)
+            //             return false;
+
+            //         // Big blind
+            //         if (searchContext.GetNextTag(ref tagStream) != MotelyTag.NegativeTag)
+            //             return false;
+            //     }
+
+            //     return true;
             MotelyVectorTagStream tagStream;
             VectorMask mask = VectorMask.AllBitsSet;
 
-            for (int ante = 2; ante <= 5; ante++)
+            for (int ante = 2; ante <= 4; ante++)
             {
                 tagStream = searchContext.CreateTagStream(ante);
 
@@ -39,25 +56,6 @@ public struct NegativeTagFilterDesc() : IMotelySeedFilterDesc<NegativeTagFilterD
             }
 
             return mask;
-
-            // MotelyVectorTagStream tagStream;
-            // Vector256<int> counts = Vector256<int>.Zero;
-
-            // for (int ante = 2; ante <= 8; ante++)
-            // {
-            //     tagStream = searchContext.CreateTagStream(ante);
-
-            //     // Small blind
-            //     counts += Vector256<int>.One & VectorEnum256.Equals(searchContext.GetNextTag(ref tagStream), MotelyTag.NegativeTag);
-
-            //     // if (mask.IsAllFalse()) break;
-
-            //     // Big blind
-            //     counts += Vector256<int>.One & VectorEnum256.Equals(searchContext.GetNextTag(ref tagStream), MotelyTag.NegativeTag);
-            // }
-
-
-            // return Vector256.GreaterThanOrEqual(counts, Vector256.Create(10));
         }
     }
 }
