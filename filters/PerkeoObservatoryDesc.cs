@@ -47,8 +47,8 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
                     if (searchContext.GetArcanaPackContents(ref tarotStream, pack.GetPackSize()).Contains(MotelyItemType.Soul))
                     {
-                        return false;
-                        // return true;
+                        MotelySingleJokerFixedRarityStream stream = searchContext.CreateSoulJokerStream(1);
+                        return searchContext.NextJoker(ref stream).Type == MotelyItemType.Perkeo;
                     }
                 }
 
@@ -69,7 +69,8 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
                         if (searchContext.GetArcanaPackContents(ref tarotStream, pack.GetPackSize()).Contains(MotelyItemType.Soul))
                         {
-                            // return true;
+                            MotelySingleJokerFixedRarityStream stream = searchContext.CreateSoulJokerStream(2);
+                            return searchContext.NextJoker(ref stream).Type == MotelyItemType.Perkeo;
                         }
                     }
                 }

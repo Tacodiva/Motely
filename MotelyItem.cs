@@ -14,6 +14,11 @@ public readonly struct MotelyItem(int value)
     public readonly MotelyItemEdition Edition => (MotelyItemEdition)((Value >> Motely.ItemEditionOffset) & Motely.ItemEditionMask);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MotelyItem(MotelyJoker joker, MotelyItemEdition edition) : this(
+        (int) joker | (int) MotelyItemTypeCategory.Joker | (int) edition
+    ) {}
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MotelyItem AsType(MotelyItemType type)
     {
         return new((Value & ~Motely.ItemTypeMask) | (int)type);

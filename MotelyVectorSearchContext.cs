@@ -77,6 +77,9 @@ public unsafe ref partial struct MotelyVectorSearchContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VectorMask SearchIndividualSeeds(VectorMask mask, MotelyIndividualSeedSearcher searcher)
     {
+        
+        if (mask.IsAllFalse()) return default;
+
         uint results = 0;
 
         uint maskShift = mask.Value;

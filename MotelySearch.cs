@@ -172,9 +172,9 @@ public unsafe sealed class MotelySearch<TFilter>
         }
     }
 
-    private const int BatchCharacters = 4;
-    private readonly static int MaxBatch = (int)Math.Pow(Motely.SeedDigits.Length, BatchCharacters);
-    private readonly static int SeedsPerBatch = (int)Math.Pow(Motely.SeedDigits.Length, Motely.MaxSeedLength - BatchCharacters);
+    private const int NonBatchedCharacters = 4;
+    private readonly static int MaxBatch = (int)Math.Pow(Motely.SeedDigits.Length, NonBatchedCharacters);
+    private readonly static int SeedsPerBatch = (int)Math.Pow(Motely.SeedDigits.Length, Motely.MaxSeedLength - NonBatchedCharacters);
 
     private readonly int _threadCount;
     private readonly TFilter _filter;
@@ -293,16 +293,20 @@ public unsafe sealed class MotelySearch<TFilter>
 
                 double seedsPerMS = (finishedCount * (double)SeedsPerBatch) / elapsedMS;
 
-                FancyConsole.SetBottomLine($"{Math.Round(portionFinished * 100, 2):F2}% ~{timeLeftSpan:hh\\:mm\\:ss} remaining ({Math.Round(seedsPerMS)} seeds/ms)");
+                string timeLeftFormatted;
+
+                if (timeLeftSpan.Days == 0) timeLeftFormatted = $"{timeLeftSpan:hh\\:mm\\:ss}";
+                else timeLeftFormatted =  $"{timeLeftSpan:d\\:hh\\:mm\\:ss}";
+
+                FancyConsole.SetBottomLine($"{Math.Round(portionFinished * 100, 2):F2}% ~{timeLeftFormatted} remaining ({Math.Round(seedsPerMS)} seeds/ms)");
             }
         }
 
-        [SkipLocalsInit]
         private void SearchBatch(int batchIdx)
         {
 
             // Figure out which digits this search is doing
-            for (int i = 0; i < BatchCharacters; i++)
+            for (int i = 0; i < NonBatchedCharacters; i++)
             {
                 int charIndex = batchIdx % Motely.SeedDigits.Length;
                 _digits[Motely.MaxSeedLength - i - 1] = Motely.SeedDigits[charIndex];
@@ -318,7 +322,7 @@ public unsafe sealed class MotelySearch<TFilter>
 
                 double num = 1;
 
-                for (int i = Motely.MaxSeedLength - 1; i > Motely.MaxSeedLength - 1 - BatchCharacters; i--)
+                for (int i = Motely.MaxSeedLength - 1; i > Motely.MaxSeedLength - 1 - NonBatchedCharacters; i--)
                 {
                     num = (1.1239285023 / num * _digits[i] * Math.PI + (i + pseudohashKeyLength + 1) * Math.PI) % 1;
                 }
@@ -330,14 +334,13 @@ public unsafe sealed class MotelySearch<TFilter>
             // Start searching
             for (int vectorIndex = 0; vectorIndex < SeedDigitVectors.Length; vectorIndex++)
             {
-                SearchVector(Motely.MaxSeedLength - 1 - BatchCharacters, SeedDigitVectors[vectorIndex], hashes, 0);
+                SearchVector(Motely.MaxSeedLength - 1 - NonBatchedCharacters, SeedDigitVectors[vectorIndex], hashes, 0);
             }
         }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        [SkipLocalsInit]
         private void SearchVector(int i, Vector512<double> seedDigitVector, Vector512<double>* nums, int numsLaneIndex)
         {
             Vector512<double>* hashes = stackalloc Vector512<double>[Search._pseudoHashKeyLengthCount];
