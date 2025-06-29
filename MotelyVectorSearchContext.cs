@@ -96,7 +96,7 @@ public unsafe ref partial struct MotelyVectorSearchContext
                 {
                     results |= 1u << lane;
                 }
-            }
+            } // IIWO1112
 
             maskShift >>= 1;
         }

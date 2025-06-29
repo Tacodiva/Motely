@@ -40,16 +40,41 @@ public ref struct MotelySingleItemSet
     public MotelyItems Items;
     public int Length;
 
-    public void Append(MotelyItem item)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ref MotelyItem GetItemRef(ref MotelySingleItemSet set, int index)
     {
-        Items[Length++] = item;
+#if MOTELY_SAFE
+        return ref set.Items[index];
+#else
+        // Be fast and skip the bounds check
+        return ref Unsafe.Add<MotelyItem>(ref Unsafe.As<MotelyItems, MotelyItem>(ref set.Items), index);
+#endif
     }
 
-    public readonly bool Contains(MotelyItemType item)
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public MotelyItem GetItem(int index)
+    {
+        return GetItemRef(ref this, index);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public void Append(MotelyItem item)
+    {
+        GetItemRef(ref this, Length++) = item;
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public bool Contains(MotelyItemType item)
     {
         for (int i = 0; i < Length; i++)
         {
-            if (Items[i].Type == item)
+            if (GetItemRef(ref this, i).Type == item)
             {
                 return true;
             }
