@@ -119,7 +119,7 @@ public struct VectorLuaRandom
 #endif
     public Vector256<int> RandInt(int min, int max)
     {
-        return MotelyVectorUtils.ConvertToVector256Int32(Random() * (max - min + 1)) + Vector256.Create<int>(min);
+        return MotelyVectorUtils.ConvertToVector256Int32(Random() * (max - min)) + Vector256.Create<int>(min);
     }
 
 #if !DEBUG

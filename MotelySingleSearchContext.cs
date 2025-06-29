@@ -173,6 +173,14 @@ public unsafe ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+    public LuaRandom GetNextLuaRandom(ref MotelySinglePrngStream stream)
+    {
+        return new LuaRandom(GetNextPseudoSeed(ref stream));
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     public double GetNextRandom(ref MotelySinglePrngStream stream)
     {
         return LuaRandom.Random(GetNextPseudoSeed(ref stream));

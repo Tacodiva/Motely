@@ -114,7 +114,7 @@ public struct LuaRandom
 #endif
     public int RandInt(int min, int max)
     {
-        return (int)(Random() * (max - min + 1)) + min;
+        return (int)(Random() * (max - min)) + min;
     }
 
 #if !DEBUG

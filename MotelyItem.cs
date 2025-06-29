@@ -13,6 +13,14 @@ public readonly struct MotelyItem(int value)
     public readonly MotelyItemEnhancement Enhancement => (MotelyItemEnhancement)((Value >> Motely.ItemEnhancementOffset) & Motely.ItemEnhancementMask);
     public readonly MotelyItemEdition Edition => (MotelyItemEdition)((Value >> Motely.ItemEditionOffset) & Motely.ItemEditionMask);
 
+    public readonly MotelyPlayingCardSuit PlayingCardSuit => (MotelyPlayingCardSuit)((Value >> Motely.PlayingCardSuitOffset) & Motely.PlayingCardSuitMask);
+    public readonly MotelyPlayingCardRank PlayingCardRank => (MotelyPlayingCardRank)(Value & Motely.PlayingCardRankMask);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MotelyItem(MotelyPlayingCard card) : this(
+        (int) card | (int) MotelyItemTypeCategory.PlayingCard
+    ) {}
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MotelyItem(MotelyJoker joker, MotelyItemEdition edition) : this(
         (int) joker | (int) MotelyItemTypeCategory.Joker | (int) edition
@@ -43,4 +51,9 @@ public readonly struct MotelyItem(int value)
     }
 
     public static implicit operator MotelyItem(MotelyItemType type) => new((int)type);
+
+    public override string ToString()
+    {
+        return Type.ToString();
+    }
 }
