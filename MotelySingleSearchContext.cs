@@ -92,8 +92,9 @@ public unsafe ref partial struct MotelySingleSearchContext
 
     private ref SeedHashCache SeedHashCache => ref _params.SeedHashCache;
     private readonly int SeedLength => _params.SeedLength;
-    private readonly char* SeedLastCharacters => _params.SeedLastCharacters;
-    private readonly Vector512<double> SeedFirstCharacter => _params.SeedFirstCharacter;
+    public readonly int SeedFirstCharactersLength => _params.SeedFirstCharactersLength;
+    private readonly char* SeedFirstCharacters => _params.SeedFirstCharacters;
+    private readonly Vector512<double>* SeedLastCharacters => _params.SeedLastCharacters;
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,16 +135,20 @@ public unsafe ref partial struct MotelySingleSearchContext
             return PseudoHashCached(key);
         }
 
+        int seedLastCharacterLength = SeedLength - SeedFirstCharactersLength;
         double num = 1;
 
-        // First we do the first 7 digits of the seed which are the same between all vector lanes
-        for (int i = SeedLength - 2; i >= 0; i--)
+        // First we do the first characters of the seed which are the same between all vector lanes
+        for (int i = SeedFirstCharactersLength - 1; i >= 0; i--)
         {
-            num = (1.1239285023 / num * SeedLastCharacters[i] * Math.PI + Math.PI * (i + key.Length + 2)) % 1;
+            num = (1.1239285023 / num * SeedFirstCharacters[i] * Math.PI + Math.PI * (i + key.Length + seedLastCharacterLength + 1)) % 1;
         }
 
-        // Then we get the digit for our lane
-        num = (1.1239285023 / num * SeedFirstCharacter[VectorLane] * Math.PI + Math.PI * (key.Length + 1)) % 1;
+        // Then we get the characters for our lane
+        for (int i = seedLastCharacterLength - 1; i >= 0; i--)
+        {
+            num = (1.1239285023 / num * SeedLastCharacters[i][VectorLane] * Math.PI + Math.PI * (key.Length + i + 1)) % 1;
+        }
 
         // Then the actual key
         for (int i = key.Length - 1; i >= 0; i--)

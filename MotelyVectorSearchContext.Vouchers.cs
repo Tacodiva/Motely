@@ -64,7 +64,6 @@ ref partial struct MotelyVectorSearchContext
 
             ++resampleCount;
         }
-
         return vouchers;
     }
 

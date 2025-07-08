@@ -1,10 +1,11 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using System.Text;
 
 namespace Motely;
 
-[method:MethodImpl(MethodImplOptions.AggressiveInlining)]
+[method: MethodImpl(MethodImplOptions.AggressiveInlining)]
 public struct VectorMask(uint mask)
 {
     public const int Length = 8;
@@ -30,6 +31,13 @@ public struct VectorMask(uint mask)
                 Value &= ~(1u << i);
             }
         }
+    }
+
+    public readonly override string ToString()
+    {
+        StringBuilder sb = new(8);
+        for (int i = 0; i < 8; i++) sb.Append(this[i] ? '1' : '0');
+        return sb.ToString();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

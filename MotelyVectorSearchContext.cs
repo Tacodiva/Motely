@@ -29,12 +29,15 @@ public ref struct MotelyVectorResampleStream(MotelyVectorPrngStream initialPrngS
 
 public delegate bool MotelyIndividualSeedSearcher(ref MotelySingleSearchContext searchContext);
 
-internal unsafe struct MotelySearchContextParams(in SeedHashCache seedHashCache, int seedLength, char* seedLastCharacters, in Vector512<double> seedFirstCharacter)
+internal unsafe struct MotelySearchContextParams(in SeedHashCache seedHashCache, int seedLength, int firstCharactersLength, char* seedFirstCharacters, Vector512<double>* seedLastCharacters)
 {
     public SeedHashCache SeedHashCache = seedHashCache;
     public readonly int SeedLength = seedLength;
-    public readonly char* SeedLastCharacters = seedLastCharacters;
-    public readonly Vector512<double> SeedFirstCharacter = seedFirstCharacter;
+    public readonly int SeedFirstCharactersLength = firstCharactersLength;
+    // The first characters which are the same between all vector lanes
+    public readonly char* SeedFirstCharacters = seedFirstCharacters;
+    // The last characters which are different between vector lanes
+    public readonly Vector512<double>* SeedLastCharacters = seedLastCharacters;
 }
 
 public unsafe ref partial struct MotelyVectorSearchContext
@@ -43,8 +46,9 @@ public unsafe ref partial struct MotelyVectorSearchContext
 
     private ref SeedHashCache SeedHashCache => ref _params.SeedHashCache;
     private readonly int SeedLength => _params.SeedLength;
-    private readonly char* SeedLastCharacters => _params.SeedLastCharacters;
-    private readonly Vector512<double> SeedFirstCharacter => _params.SeedFirstCharacter;
+    private readonly char* SeedFirstCharcaters => _params.SeedFirstCharacters;
+    public readonly int SeedFirstCharactersLength => _params.SeedFirstCharactersLength;
+    private readonly Vector512<double>* SeedLastCharacters => _params.SeedLastCharacters;
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,7 +90,8 @@ public unsafe ref partial struct MotelyVectorSearchContext
 
         for (int lane = 0; lane < Vector512<double>.Count; lane++)
         {
-            if ((maskShift & 1) != 0)
+            // If this lane is masked and the lane contains a valid seed
+            if ((maskShift & 1) != 0 && _params.SeedLastCharacters[0][lane] != 0)
             {
                 MotelySingleSearchContext singleSearchContext = new(ref _params, lane);
 
@@ -96,7 +101,7 @@ public unsafe ref partial struct MotelyVectorSearchContext
                 {
                     results |= 1u << lane;
                 }
-            } // IIWO1112
+            }
 
             maskShift >>= 1;
         }
@@ -142,31 +147,31 @@ public unsafe ref partial struct MotelyVectorSearchContext
             return PseudoHashCached(key);
         }
 
+        int seedLastCharacterLength = SeedLength - SeedFirstCharactersLength;
         double num = 1;
 
-        // First we do the first 7 digits of the seed which are the same between all vector lanes
-        for (int i = SeedLength - 2; i >= 0; i--)
+        // First we do the first characters of the seed which are the same between all vector lanes
+        for (int i = SeedFirstCharactersLength - 1; i >= 0; i--)
         {
-            num = (1.1239285023 / num * SeedLastCharacters[i] * Math.PI + Math.PI * (i + key.Length + 2)) % 1;
+            num = (1.1239285023 / num * SeedFirstCharcaters[i] * Math.PI + Math.PI * (i + key.Length + seedLastCharacterLength + 1)) % 1;
         }
 
-        // Then we vectorize and do the last digit of the seed
+        // Then we vectorize and do the last characters of the seed
         Vector512<double> numVector = Vector512.Create(num);
 
-        {
+        for (int i = seedLastCharacterLength - 1; i >= 0; i--) {
             numVector = Vector512.Divide(Vector512.Create(1.1239285023), numVector);
 
-            numVector = Vector512.Multiply(numVector, SeedFirstCharacter);
+            numVector = Vector512.Multiply(numVector, SeedLastCharacters[i]);
 
             numVector = Vector512.Multiply(numVector, Math.PI);
-            numVector = Vector512.Add(numVector, Vector512.Create((key.Length + 1) * Math.PI));
+            numVector = Vector512.Add(numVector, Vector512.Create((i + key.Length + 1) * Math.PI));
 
             Vector512<double> intPart = Vector512.Floor(numVector);
             numVector = Vector512.Subtract(numVector, intPart);
         }
 
         // Now finally the actual key
-
         for (int i = key.Length - 1; i >= 0; i--)
         {
             numVector = Vector512.Divide(Vector512.Create(1.1239285023), numVector);

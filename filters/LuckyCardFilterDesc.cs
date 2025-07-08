@@ -17,18 +17,19 @@ public struct LuckyCardFilterDesc() : IMotelySeedFilterDesc<LuckyCardFilterDesc.
 
         public VectorMask Filter(ref MotelyVectorSearchContext searchContext)
         {
-            MotelyVectorPrngStream luckyMoney = searchContext.CreatePrngStreamCached("lucky_money");
+            // MotelyVectorPrngStream luckyMoney = searchContext.CreatePrngStreamCached("lucky_money");
+            MotelyVectorPrngStream luckyMoney = searchContext.CreatePrngStream("lucky_money");
             // MotelyVectorPrngStream luckyMoney = searchContext.CreatePrngStreamCached("space");
 
             VectorMask mask = VectorMask.AllBitsSet;
             Vector512<double> values;
 
-            for (int i = 0; i < 15; i++)
+            for (int i = 0; i < 10; i++)
             {
                 values = searchContext.GetNextRandom(ref luckyMoney);
 
-                mask &= Vector512.LessThan(values, Vector512.Create(1d / 25d));
-                // mask &= Vector512.LessThan(values, Vector512.Create(1d / 4d));
+                // mask &= Vector512.LessThan(values, Vector512.Create(1d / 25d));
+                mask &= Vector512.LessThan(values, Vector512.Create(1d / 4d));
 
                 if (mask.IsAllFalse())
                 {
