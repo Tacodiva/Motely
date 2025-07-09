@@ -295,12 +295,9 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
         _elapsedTime.Stop();
     }
 
-    //PrintSeed
     private void ReportSeed(ReadOnlySpan<char> seed)
     {
-
         FancyConsole.WriteLine($"{seed}");
-        PrintReport();
     }
 
     private void PrintReport()
@@ -320,7 +317,7 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
 
         string timeLeftFormatted;
         bool invalid = double.IsNaN(timeLeft) || double.IsInfinity(timeLeft) || timeLeft < 0;
-        // Clamp to max TimeSpan if too large
+        // Clamp to max TimeSpan if too large - for very slow searches
         if (invalid || timeLeft > TimeSpan.MaxValue.TotalMilliseconds)
         {
             timeLeftFormatted = "--:--:--";
@@ -332,6 +329,8 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
             else timeLeftFormatted = $"{timeLeftSpan:d\\:hh\\:mm\\:ss}";
         }
 
+        // Calculate seeds per millisecond
+        // Avoid divide by zero for a very fast find
         double seedsPerMS = 0;
         if (elapsedMS > 1)
             seedsPerMS = thisCompletedCount * (double)_threads[0].SeedsPerBatch / elapsedMS;
