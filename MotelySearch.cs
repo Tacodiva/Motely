@@ -1,4 +1,3 @@
-
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -296,9 +295,12 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
         _elapsedTime.Stop();
     }
 
+    //PrintSeed
     private void ReportSeed(ReadOnlySpan<char> seed)
     {
-        // FancyConsole.WriteLine($"{seed}");
+
+        FancyConsole.WriteLine($"{seed}");
+        PrintReport();
     }
 
     private void PrintReport()
@@ -316,14 +318,23 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
         double totalTimeEstimate = elapsedMS / thisPortionFinished;
         double timeLeft = totalTimeEstimate - elapsedMS;
 
-        TimeSpan timeLeftSpan = TimeSpan.FromMilliseconds(timeLeft);
-
-        double seedsPerMS = (thisCompletedCount * (double)_threads[0].SeedsPerBatch) / elapsedMS;
-
         string timeLeftFormatted;
+        bool invalid = double.IsNaN(timeLeft) || double.IsInfinity(timeLeft) || timeLeft < 0;
+        // Clamp to max TimeSpan if too large
+        if (invalid || timeLeft > TimeSpan.MaxValue.TotalMilliseconds)
+        {
+            timeLeftFormatted = "--:--:--";
+        }
+        else
+        {
+            TimeSpan timeLeftSpan = TimeSpan.FromMilliseconds(Math.Min(timeLeft, TimeSpan.MaxValue.TotalMilliseconds));
+            if (timeLeftSpan.Days == 0) timeLeftFormatted = $"{timeLeftSpan:hh\\:mm\\:ss}";
+            else timeLeftFormatted = $"{timeLeftSpan:d\\:hh\\:mm\\:ss}";
+        }
 
-        if (timeLeftSpan.Days == 0) timeLeftFormatted = $"{timeLeftSpan:hh\\:mm\\:ss}";
-        else timeLeftFormatted = $"{timeLeftSpan:d\\:hh\\:mm\\:ss}";
+        double seedsPerMS = 0;
+        if (elapsedMS > 1)
+            seedsPerMS = thisCompletedCount * (double)_threads[0].SeedsPerBatch / elapsedMS;
 
         FancyConsole.SetBottomLine($"{Math.Round(totalPortionFinished * 100, 2):F2}% ~{timeLeftFormatted} remaining ({Math.Round(seedsPerMS)} seeds/ms)");
 
