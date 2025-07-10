@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 
@@ -156,7 +155,8 @@ public sealed class MotelySearchSettings<TFilter>(IMotelySeedFilterDesc<TFilter>
         return this;
     }
 
-    public MotelySearchSettings<TFilter> WithListSearch(IEnumerable<string> seeds) {
+    public MotelySearchSettings<TFilter> WithListSearch(IEnumerable<string> seeds)
+    {
         return WithProviderSearch(new MotelySeedListProvider(seeds));
     }
 
@@ -429,7 +429,7 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
                 }
 
                 SearchBatch(batchIdx);
-                
+
                 Interlocked.Increment(ref Search._completedBatchCount);
 
                 Search.PrintReport();
@@ -665,6 +665,7 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
         private readonly int _nonBatchCharCount;
 
         private readonly char* _digits;
+        private readonly Vector512<double>* _hashes;
 
         public int LastCompletedBatch;
 
@@ -677,6 +678,8 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
 
             _nonBatchCharCount = Motely.MaxSeedLength - _batchCharCount;
             MaxBatch = (int)Math.Pow(Motely.SeedDigits.Length, _nonBatchCharCount);
+
+            _hashes = (Vector512<double>*)Marshal.AllocHGlobal(sizeof(Vector512<double>) * Search._pseudoHashKeyLengthCount * (_batchCharCount + 1));
         }
 
         protected override void SearchBatch(int batchIdx)
@@ -689,7 +692,7 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
                 batchIdx /= Motely.SeedDigits.Length;
             }
 
-            Vector512<double>* hashes = stackalloc Vector512<double>[Search._pseudoHashKeyLengthCount];
+            Vector512<double>* hashes = &_hashes[_batchCharCount * Search._pseudoHashKeyLengthCount];
 
             // Calculate hash for the first digits at all the required pseudohash lengths
             for (int pseudohashKeyIdx = 0; pseudohashKeyIdx < Search._pseudoHashKeyLengthCount; pseudohashKeyIdx++)
@@ -703,9 +706,9 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
                     num = (1.1239285023 / num * _digits[i] * Math.PI + (i + pseudohashKeyLength + 1) * Math.PI) % 1;
                 }
 
-                hashes[pseudohashKeyIdx] = Vector512.Create(num);
+                // We only need to write to the first lane because that's the only one that we need
+                *(double*)&hashes[pseudohashKeyIdx] = num;
             }
-
 
             // Start searching
             for (int vectorIndex = 0; vectorIndex < SeedDigitVectors.Length; vectorIndex++)
@@ -719,12 +722,11 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
 #endif
         private void SearchVector(int i, Vector512<double> seedDigitVector, Vector512<double>* nums, int numsLaneIndex)
         {
-            Vector512<double>* hashes = stackalloc Vector512<double>[Search._pseudoHashKeyLengthCount];
-
+            Vector512<double>* hashes = &_hashes[i * Search._pseudoHashKeyLengthCount];
+            
             for (int pseudohashKeyIdx = 0; pseudohashKeyIdx < Search._pseudoHashKeyLengthCount; pseudohashKeyIdx++)
             {
                 int pseudohashKeyLength = Search._pseudoHashKeyLengths[pseudohashKeyIdx];
-
                 Vector512<double> calcVector = Vector512.Divide(Vector512.Create(1.1239285023), ((double*)&nums[pseudohashKeyIdx])[numsLaneIndex]);
 
                 calcVector = Vector512.Multiply(calcVector, seedDigitVector);
@@ -792,6 +794,7 @@ public unsafe sealed class MotelySearch<TFilter> : IMotelySearch
         {
             base.Dispose();
             Marshal.FreeHGlobal((nint)_digits);
+            Marshal.FreeHGlobal((nint)_hashes);
         }
     }
 }
