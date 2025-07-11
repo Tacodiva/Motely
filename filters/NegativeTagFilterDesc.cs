@@ -8,7 +8,7 @@ public struct NegativeTagFilterDesc() : IMotelySeedFilterDesc<NegativeTagFilterD
 
     public NegativeTagFilter CreateFilter(ref MotelyFilterCreationContext ctx)
     {
-        for (int ante = 2; ante <= 5; ante++)
+        for (int ante = 2; ante <= 4; ante++)
             ctx.CacheTagStream(ante);
 
         return new NegativeTagFilter();
@@ -19,30 +19,12 @@ public struct NegativeTagFilterDesc() : IMotelySeedFilterDesc<NegativeTagFilterD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public VectorMask Filter(ref MotelyVectorSearchContext searchContext)
         {
-            // return searchContext.SearchIndividualSeeds((ref MotelySingleSearchContext searchContext) =>
-            // {
-            //     MotelySingleTagStream tagStream;
-
-            //     for (int ante = 2; ante <= 4; ante++)
-            //     {
-            //         tagStream = searchContext.CreateTagStream(ante);
-
-            //         // Small blind
-            //         if (searchContext.GetNextTag(ref tagStream) != MotelyTag.NegativeTag)
-            //             return false;
-
-            //         // Big blind
-            //         if (searchContext.GetNextTag(ref tagStream) != MotelyTag.NegativeTag)
-            //             return false;
-            //     }
-
-            //     return true;
             MotelyVectorTagStream tagStream;
             VectorMask mask = VectorMask.AllBitsSet;
 
             for (int ante = 2; ante <= 4; ante++)
             {
-                tagStream = searchContext.CreateTagStream(ante);
+                tagStream = searchContext.CreateTagStreamCached(ante);
 
                 // Small blind
                 mask &= VectorEnum256.Equals(searchContext.GetNextTag(ref tagStream), MotelyTag.NegativeTag);

@@ -43,7 +43,7 @@ public ref struct MotelySingleItemSet
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ref MotelyItem GetItemRef(ref MotelySingleItemSet set, int index)
     {
-#if MOTELY_SAFE
+#if DEBUG
         return ref set.Items[index];
 #else
         // Be fast and skip the bounds check
@@ -88,18 +88,19 @@ public unsafe ref partial struct MotelySingleSearchContext
 {
     public readonly int VectorLane;
 
-    private ref MotelySearchContextParams _params;
+    private readonly ref readonly MotelySearchContextParams _params;
 
-    private ref SeedHashCache SeedHashCache => ref _params.SeedHashCache;
+    private readonly ref readonly SeedHashCache SeedHashCache => ref _params.SeedHashCache;
     private readonly int SeedLength => _params.SeedLength;
-    public readonly int SeedFirstCharactersLength => _params.SeedFirstCharactersLength;
+    private readonly int SeedFirstCharactersLength => _params.SeedFirstCharactersLength;
+    private readonly int SeedLastCharactersLength => _params.SeedLastCharactersLength;
     private readonly char* SeedFirstCharacters => _params.SeedFirstCharacters;
     private readonly Vector512<double>* SeedLastCharacters => _params.SeedLastCharacters;
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    internal MotelySingleSearchContext(ref MotelySearchContextParams @params, int lane)
+    internal MotelySingleSearchContext(ref readonly MotelySearchContextParams @params, int lane)
     {
         _params = ref @params;
         VectorLane = lane;
@@ -110,8 +111,9 @@ public unsafe ref partial struct MotelySingleSearchContext
 #endif
     public double PseudoHashCached(string key)
     {
-#if MOTELY_SAFE
-        if (!_seedHashCache.HasPartialHash(key.Length))
+        
+#if DEBUG
+        if (!SeedHashCache.HasPartialHash(key.Length))
             throw new KeyNotFoundException("Cache does not contain key :c");
 #endif
 
@@ -135,7 +137,7 @@ public unsafe ref partial struct MotelySingleSearchContext
             return PseudoHashCached(key);
         }
 
-        int seedLastCharacterLength = SeedLength - SeedFirstCharactersLength;
+        int seedLastCharacterLength = SeedLastCharactersLength;
         double num = 1;
 
         // First we do the first characters of the seed which are the same between all vector lanes

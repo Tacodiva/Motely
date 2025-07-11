@@ -66,7 +66,7 @@ public unsafe class MotelyWeightedPool<T> : IDisposable
 
             current += 1;
 
-#if MOTELY_SAFE
+#if DEBUG
             if (current >= _pool + Count)
                 throw new IndexOutOfRangeException();
 #endif
@@ -105,7 +105,7 @@ public unsafe class MotelyWeightedPool<T> : IDisposable
 
             current += 1;
 
-#if MOTELY_SAFE
+#if DEBUG
             if (current >= _pool + Count)
                 throw new IndexOutOfRangeException();
 #endif

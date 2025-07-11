@@ -29,31 +29,48 @@ public ref struct MotelyVectorResampleStream(MotelyVectorPrngStream initialPrngS
 
 public delegate bool MotelyIndividualSeedSearcher(ref MotelySingleSearchContext searchContext);
 
-internal unsafe struct MotelySearchContextParams(in SeedHashCache seedHashCache, int seedLength, int firstCharactersLength, char* seedFirstCharacters, Vector512<double>* seedLastCharacters)
+internal unsafe struct MotelySearchContextParams(in SeedHashCache seedHashCache, int seedLength, int firstCharactersLength, char* seedFirstCharacters, Vector512<double>* seedLastCharacters, bool isAdditionalFilter = false)
 {
     public SeedHashCache SeedHashCache = seedHashCache;
     public readonly int SeedLength = seedLength;
     public readonly int SeedFirstCharactersLength = firstCharactersLength;
+    public readonly int SeedLastCharactersLength => SeedLength - SeedFirstCharactersLength;
     // The first characters which are the same between all vector lanes
     public readonly char* SeedFirstCharacters = seedFirstCharacters;
     // The last characters which are different between vector lanes
     public readonly Vector512<double>* SeedLastCharacters = seedLastCharacters;
-}
-
-public unsafe ref partial struct MotelyVectorSearchContext
-{
-    private ref MotelySearchContextParams _params;
-
-    private ref SeedHashCache SeedHashCache => ref _params.SeedHashCache;
-    private readonly int SeedLength => _params.SeedLength;
-    private readonly char* SeedFirstCharcaters => _params.SeedFirstCharacters;
-    public readonly int SeedFirstCharactersLength => _params.SeedFirstCharactersLength;
-    private readonly Vector512<double>* SeedLastCharacters => _params.SeedLastCharacters;
+    public readonly bool IsAdditionalFilter = isAdditionalFilter;
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    internal MotelyVectorSearchContext(ref MotelySearchContextParams @params)
+    public readonly bool IsLaneValid(int lane)
+    {
+        // If all the lanes are the same seed, we say only the first lane is valid
+        if (SeedFirstCharactersLength == SeedLength)
+            return lane == 0;
+
+        // Otherwise, the lane is valid if its character is not null
+        return ((double*)&SeedLastCharacters[0])[lane] != '\0';
+    }
+}
+
+public unsafe ref partial struct MotelyVectorSearchContext
+{
+    private readonly ref readonly MotelySearchContextParams _params;
+
+    private readonly ref readonly SeedHashCache SeedHashCache => ref _params.SeedHashCache;
+    private readonly int SeedLength => _params.SeedLength;
+    private readonly char* SeedFirstCharcaters => _params.SeedFirstCharacters;
+    private readonly int SeedFirstCharactersLength => _params.SeedFirstCharactersLength;
+    private readonly int SeedLastCharactersLength => _params.SeedLastCharactersLength;
+    private readonly Vector512<double>* SeedLastCharacters => _params.SeedLastCharacters;
+    private readonly bool IsAdditionalFilter => _params.IsAdditionalFilter;
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    internal MotelyVectorSearchContext(in MotelySearchContextParams @params)
     {
         _params = ref @params;
     }
@@ -65,7 +82,7 @@ public unsafe ref partial struct MotelyVectorSearchContext
 
         for (int lane = 0; lane < Vector512<double>.Count; lane++)
         {
-            MotelySingleSearchContext singleSearchContext = new(ref _params, lane);
+            MotelySingleSearchContext singleSearchContext = new(in _params, lane);
 
             bool success = searcher(ref singleSearchContext);
 
@@ -81,7 +98,7 @@ public unsafe ref partial struct MotelyVectorSearchContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VectorMask SearchIndividualSeeds(VectorMask mask, MotelyIndividualSeedSearcher searcher)
     {
-        
+
         if (mask.IsAllFalse()) return default;
 
         uint results = 0;
@@ -90,10 +107,9 @@ public unsafe ref partial struct MotelyVectorSearchContext
 
         for (int lane = 0; lane < Vector512<double>.Count; lane++)
         {
-            // If this lane is masked and the lane contains a valid seed
-            if ((maskShift & 1) != 0 && _params.SeedLastCharacters[0][lane] != 0)
+            if ((maskShift & 1) != 0 && _params.IsLaneValid(lane))
             {
-                MotelySingleSearchContext singleSearchContext = new(ref _params, lane);
+                MotelySingleSearchContext singleSearchContext = new(in _params, lane);
 
                 bool success = searcher(ref singleSearchContext);
 
@@ -112,13 +128,28 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector512<double> PseudoHashCached(string key)
+    public readonly Vector512<double> PseudoHashCached(string key)
     {
-#if MOTELY_SAFE
-        if (!_seedHashCache.HasPartialHash(key.Length))
+        if (IsAdditionalFilter)
+        {
+            // If we are an additional filter, we can't guarantee that our cached pseudo hashes are actually cached
+            if (!SeedHashCache.HasPartialHash(key.Length))
+                return InternalPseudoHash(key);
+        }
+
+#if DEBUG
+        if (!SeedHashCache.HasPartialHash(key.Length))
             throw new KeyNotFoundException("Cache does not contain key :c");
 #endif
 
+        return InternalPseudoHashCached(key);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private readonly Vector512<double> InternalPseudoHashCached(string key)
+    {
         Vector512<double> calcVector = SeedHashCache.GetPartialHashVector(key.Length);
 
         for (int i = key.Length - 1; i >= 0; i--)
@@ -140,14 +171,22 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector512<double> PseudoHash(string key)
+    public readonly Vector512<double> PseudoHash(string key)
     {
         if (SeedHashCache.HasPartialHash(key.Length))
         {
-            return PseudoHashCached(key);
+            return InternalPseudoHashCached(key);
         }
 
-        int seedLastCharacterLength = SeedLength - SeedFirstCharactersLength;
+        return InternalPseudoHash(key);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private readonly Vector512<double> InternalPseudoHash(string key)
+    {
+        int seedLastCharacterLength = SeedLastCharactersLength;
         double num = 1;
 
         // First we do the first characters of the seed which are the same between all vector lanes
@@ -159,7 +198,8 @@ public unsafe ref partial struct MotelyVectorSearchContext
         // Then we vectorize and do the last characters of the seed
         Vector512<double> numVector = Vector512.Create(num);
 
-        for (int i = seedLastCharacterLength - 1; i >= 0; i--) {
+        for (int i = seedLastCharacterLength - 1; i >= 0; i--)
+        {
             numVector = Vector512.Divide(Vector512.Create(1.1239285023), numVector);
 
             numVector = Vector512.Multiply(numVector, SeedLastCharacters[i]);

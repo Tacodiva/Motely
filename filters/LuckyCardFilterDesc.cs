@@ -24,7 +24,7 @@ public struct LuckyCardFilterDesc() : IMotelySeedFilterDesc<LuckyCardFilterDesc.
             VectorMask mask = VectorMask.AllBitsSet;
             Vector512<double> values;
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 4; i++)
             {
                 values = searchContext.GetNextRandom(ref luckyMoney);
 
