@@ -2,6 +2,20 @@ namespace Motely;
 
 public enum MotelyItemType
 {
+    // Planet Cards
+    Mercury = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Mercury,
+    Venus = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Venus,
+    Earth = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Earth,
+    Mars = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Mars,
+    Jupiter = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Jupiter,
+    Saturn = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Saturn,
+    Uranus = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Uranus,
+    Neptune = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Neptune,
+    Pluto = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Pluto,
+    PlanetX = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.PlanetX,
+    Ceres = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Ceres,
+    Eris = MotelyItemTypeCategory.PlanetCard | MotelyPlanetCard.Eris,
+
     // Spectral Cards
     Familiar = MotelyItemTypeCategory.SpectralCard | MotelySpectralCard.Familiar,
     Grim = MotelyItemTypeCategory.SpectralCard | MotelySpectralCard.Grim,
@@ -20,6 +34,7 @@ public enum MotelyItemType
     Medium = MotelyItemTypeCategory.SpectralCard | MotelySpectralCard.Medium,
     Cryptid = MotelyItemTypeCategory.SpectralCard | MotelySpectralCard.Cryptid,
     Soul = MotelyItemTypeCategory.SpectralCard | MotelySpectralCard.Soul,
+    BlackHole = MotelyItemTypeCategory.SpectralCard | MotelySpectralCard.BlackHole,
 
     // Tarot Cards
     TheFool = MotelyItemTypeCategory.TarotCard | MotelyTarotCard.TheFool,

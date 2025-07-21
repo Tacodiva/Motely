@@ -7,7 +7,10 @@ namespace Motely;
 
 public struct MotelySinglePrngStream(double state)
 {
+    public static MotelySinglePrngStream Invalid => new(-1);
+
     public double State = state;
+    public readonly bool IsInvalid => State < 0;
 }
 
 public ref struct MotelySingleResampleStream(MotelySinglePrngStream initialPrngStream, bool isCached)
@@ -27,96 +30,66 @@ public ref struct MotelySingleResampleStream(MotelySinglePrngStream initialPrngS
     public bool IsCached = isCached;
 }
 
-public ref struct MotelySingleItemSet
-{
-    public const int MaxLength = 5;
-
-    [InlineArray(MaxLength)]
-    public struct MotelyItems
-    {
-        public MotelyItem Card;
-    }
-
-    public MotelyItems Items;
-    public int Length;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ref MotelyItem GetItemRef(ref MotelySingleItemSet set, int index)
-    {
-#if DEBUG
-        return ref set.Items[index];
-#else
-        // Be fast and skip the bounds check
-        return ref Unsafe.Add<MotelyItem>(ref Unsafe.As<MotelyItems, MotelyItem>(ref set.Items), index);
-#endif
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelyItem GetItem(int index)
-    {
-        return GetItemRef(ref this, index);
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public void Append(MotelyItem item)
-    {
-        GetItemRef(ref this, Length++) = item;
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public bool Contains(MotelyItemType item)
-    {
-        for (int i = 0; i < Length; i++)
-        {
-            if (GetItemRef(ref this, i).Type == item)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-}
 
 public unsafe ref partial struct MotelySingleSearchContext
 {
     public readonly int VectorLane;
 
-    private readonly ref readonly MotelySearchContextParams _params;
+    private readonly ref readonly MotelySearchParameters _searchParameters;
+    private readonly ref readonly MotelySearchContextParams _contextParams;
 
-    private readonly ref readonly SeedHashCache SeedHashCache => ref _params.SeedHashCache;
-    private readonly int SeedLength => _params.SeedLength;
-    private readonly int SeedFirstCharactersLength => _params.SeedFirstCharactersLength;
-    private readonly int SeedLastCharactersLength => _params.SeedLastCharactersLength;
-    private readonly char* SeedFirstCharacters => _params.SeedFirstCharacters;
-    private readonly Vector512<double>* SeedLastCharacters => _params.SeedLastCharacters;
+    public readonly MotelyStake Stake => _searchParameters.Stake;
+    public readonly MotelyDeck Deck => _searchParameters.Deck;
+
+    private readonly ref readonly SeedHashCache SeedHashCache => ref _contextParams.SeedHashCache;
+    private readonly int SeedLength => _contextParams.SeedLength;
+    private readonly int SeedFirstCharactersLength => _contextParams.SeedFirstCharactersLength;
+    private readonly int SeedLastCharactersLength => _contextParams.SeedLastCharactersLength;
+    private readonly char* SeedFirstCharacters => _contextParams.SeedFirstCharacters;
+    private readonly Vector512<double>* SeedLastCharacters => _contextParams.SeedLastCharacters;
+    private readonly bool IsAdditionalFilter => _contextParams.IsAdditionalFilter;
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    internal MotelySingleSearchContext(ref readonly MotelySearchContextParams @params, int lane)
+    internal MotelySingleSearchContext(ref readonly MotelySearchParameters searchParameters, ref readonly MotelySearchContextParams contextParams, int lane)
     {
-        _params = ref @params;
+        _contextParams = ref contextParams;
+        _searchParameters = ref searchParameters;
         VectorLane = lane;
     }
 
-#if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly string GetSeed() => _contextParams.GetSeed(VectorLane);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly int GetSeed(char* output) => _contextParams.GetSeed(VectorLane, output);
+
+#if !DEBUG
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
     public double PseudoHashCached(string key)
     {
-        
+        if (IsAdditionalFilter)
+        {
+            // If we are an additional filter, we can't guarantee that our cached pseudo hashes are actually cached
+            if (!SeedHashCache.HasPartialHash(key.Length))
+                return InternalPseudoHash(key);
+        }
+
 #if DEBUG
         if (!SeedHashCache.HasPartialHash(key.Length))
             throw new KeyNotFoundException("Cache does not contain key :c");
 #endif
 
+        return InternalPseudoHashCached(key);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private readonly double InternalPseudoHashCached(string key)
+    {
         double num = SeedHashCache.GetPartialHash(key.Length, VectorLane);
 
         for (int i = key.Length - 1; i >= 0; i--)
@@ -127,6 +100,7 @@ public unsafe ref partial struct MotelySingleSearchContext
         return num;
     }
 
+
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -134,9 +108,17 @@ public unsafe ref partial struct MotelySingleSearchContext
     {
         if (SeedHashCache.HasPartialHash(key.Length))
         {
-            return PseudoHashCached(key);
+            return InternalPseudoHashCached(key);
         }
 
+        return InternalPseudoHash(key);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private double InternalPseudoHash(string key)
+    {
         int seedLastCharacterLength = SeedLastCharactersLength;
         double num = 1;
 

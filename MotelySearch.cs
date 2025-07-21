@@ -9,13 +9,17 @@ namespace Motely;
 
 public ref struct MotelyFilterCreationContext
 {
-
+    private readonly ref readonly MotelySearchParameters _searchParameters;
     private readonly HashSet<int> _cachedPseudohashKeyLengths;
     public readonly IReadOnlyCollection<int> CachedPseudohashKeyLengths => _cachedPseudohashKeyLengths;
     public bool IsAdditionalFilter;
 
-    public MotelyFilterCreationContext()
+    public readonly MotelyStake Stake => _searchParameters.Stake;
+    public readonly MotelyDeck Deck => _searchParameters.Deck;
+
+    public MotelyFilterCreationContext(ref readonly MotelySearchParameters searchParameters)
     {
+        _searchParameters = ref searchParameters;
         _cachedPseudohashKeyLengths = [0];
     }
 
@@ -57,7 +61,7 @@ public ref struct MotelyFilterCreationContext
 
     public readonly void CacheTarotStream(int ante, bool force = false)
     {
-        CacheResampleStream(MotelyPrngKeys.Tarot + MotelyPrngKeys.ArcanaPack + ante, force);
+        CacheResampleStream(MotelyPrngKeys.Tarot + MotelyPrngKeys.ArcanaPackItemSource + ante, force);
         CachePseudoHash(MotelyPrngKeys.TerrotSoul + MotelyPrngKeys.Tarot + ante, force);
     }
 
@@ -137,13 +141,13 @@ public sealed class MotelySearchSettings<TBaseFilter>(IMotelySeedFilterDesc<TBas
 
     public IList<IMotelySeedFilterDesc>? AdditionalFilters { get; set; } = null;
 
-    public MotelySearchMode Mode;
+    public MotelySearchMode Mode { get; set; }
 
     /// <summary>
     /// The object which provides seeds to search. Should only be non-null if
     /// `Mode` is set to `Provider`.
     /// </summary>
-    public IMotelySeedProvider? SeedProvider;
+    public IMotelySeedProvider? SeedProvider { get; set; }
 
     /// <summary>
     /// The number of seed characters each batch contains.
@@ -152,6 +156,9 @@ public sealed class MotelySearchSettings<TBaseFilter>(IMotelySeedFilterDesc<TBas
     /// Only meaningful when `Mode` is set to `Sequential`.
     /// </summary>
     public int SequentialBatchCharacterCount { get; set; } = 3;
+
+    public MotelyDeck Deck { get; set; } = MotelyDeck.Red;
+    public MotelyStake Stake { get; set; } = MotelyStake.White;
 
     public MotelySearchSettings<TBaseFilter> WithThreadCount(int threadCount)
     {
@@ -197,6 +204,18 @@ public sealed class MotelySearchSettings<TBaseFilter>(IMotelySeedFilterDesc<TBas
         return this;
     }
 
+    public MotelySearchSettings<TBaseFilter> WithDeck(MotelyDeck deck)
+    {
+        Deck = deck;
+        return this;
+    }
+
+    public MotelySearchSettings<TBaseFilter> WithStake(MotelyStake stake)
+    {
+        Stake = stake;
+        return this;
+    }
+
     public IMotelySearch Start()
     {
         MotelySearch<TBaseFilter> search = new(this);
@@ -225,9 +244,18 @@ public enum MotelySearchStatus
     Disposed
 }
 
+public struct MotelySearchParameters
+{
+    public MotelyStake Stake;
+    public MotelyDeck Deck;
+}
+
 public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
     where TBaseFilter : struct, IMotelySeedFilter
 {
+
+    private readonly MotelySearchParameters _searchParameters;
+
     private readonly MotelySearchThread[] _threads;
     private readonly Barrier _pauseBarrier;
     private readonly Barrier _unpauseBarrier;
@@ -254,7 +282,13 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
 
     public MotelySearch(MotelySearchSettings<TBaseFilter> settings)
     {
-        MotelyFilterCreationContext filterCreationContext = new()
+        _searchParameters = new()
+        {
+            Deck = settings.Deck,
+            Stake = settings.Stake
+        };
+
+        MotelyFilterCreationContext filterCreationContext = new(in _searchParameters)
         {
             IsAdditionalFilter = false
         };
@@ -552,12 +586,12 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        protected void SearchSeeds(in MotelySearchContextParams searchParams)
+        protected void SearchSeeds(in MotelySearchContextParams searchContextParams)
         {
             // This is the method for searching the base filter, we should not be searching additional filters
-            Debug.Assert(!searchParams.IsAdditionalFilter);
+            Debug.Assert(!searchContextParams.IsAdditionalFilter);
 
-            MotelyVectorSearchContext searchContext = new(in searchParams);
+            MotelyVectorSearchContext searchContext = new(in Search._searchParameters, in searchContextParams);
 
             VectorMask searchResultMask = Search._baseFilter.Filter(ref searchContext);
 
@@ -566,12 +600,12 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
                 if (Search._additionalFilters.Length == 0)
                 {
                     // If we have no additional filters, we can just report the results from the base filter
-                    ReportSeeds(searchResultMask, in searchParams);
+                    ReportSeeds(searchResultMask, in searchContextParams);
                 }
                 else
                 {
                     // Otherwise, we need to queue up the seeds for the first additional filter.
-                    BatchSeeds(0, searchResultMask, in searchParams);
+                    BatchSeeds(0, searchResultMask, in searchContextParams);
                 }
             }
         }
@@ -581,25 +615,14 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
         {
             Debug.Assert(searchResultMask.IsPartiallyTrue(), "Mask should be checked for partial truth before calling report seeds (for performance).");
 
-            Span<char> seed = stackalloc char[Motely.MaxSeedLength];
+            char* seed = stackalloc char[Motely.MaxSeedLength];
 
             for (int lane = 0; lane < Vector512<double>.Count; lane++)
             {
                 if (searchResultMask[lane] && searchParams.IsLaneValid(lane))
                 {
-                    int i = 0;
-
-                    for (; i < searchParams.SeedLastCharactersLength; i++)
-                    {
-                        seed[i] = (char)((double*)searchParams.SeedLastCharacters)[i * Vector512<double>.Count + lane];
-                    }
-
-                    for (; i < searchParams.SeedLength; i++)
-                    {
-                        seed[i] = searchParams.SeedFirstCharacters[i - searchParams.SeedLastCharactersLength];
-                    }
-
-                    Search.ReportSeed(seed[..searchParams.SeedLength]);
+                    int length = searchParams.GetSeed(lane, seed);
+                    Search.ReportSeed(new Span<char>(seed, length));
                 }
             }
         }
@@ -692,7 +715,7 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
                 (Vector512<double>*)&filterBatch->SeedCharacters
             );
 
-            MotelyVectorSearchContext searchContext = new(in searchParams);
+            MotelyVectorSearchContext searchContext = new(in Search._searchParameters, in searchParams);
 
             VectorMask searchResultMask = Search._additionalFilters[filterIndex].Filter(ref searchContext);
 
