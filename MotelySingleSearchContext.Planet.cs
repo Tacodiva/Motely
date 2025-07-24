@@ -72,15 +72,11 @@ ref partial struct MotelySingleSearchContext
 
 
     public MotelySingleItemSet GetNextCelestialPackContents(ref MotelySinglePlanetStream planetStream, MotelyBoosterPackSize size)
-        => GetNextCelestialPackContents(ref planetStream, MotelyBoosterPackType.Celestial.GetCardCount(size));
-
-    public MotelySingleItemSet GetNextCelestialPackContents(ref MotelySinglePlanetStream planetStream, int size)
     {
-        Debug.Assert(size <= MotelySingleItemSet.MaxLength);
-
         MotelySingleItemSet pack = new();
+        int cardCount = MotelyBoosterPackType.Celestial.GetCardCount(size);
 
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < cardCount; i++)
             pack.Append(GetNextPlanet(ref planetStream, pack));
 
         return pack;

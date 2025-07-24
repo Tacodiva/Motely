@@ -31,11 +31,14 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
             return searchContext.SearchIndividualSeeds((ref MotelySingleSearchContext searchContext) =>
             {
 
-                MotelySingleBoosterPackStream packStream = searchContext.CreateBoosterPackStream(1);
+                int ante = 2;
 
-                MotelySingleTarotStream tarotStream = searchContext.CreateArcanaPackTarotStream(1);
-                MotelySinglePlanetStream planetStream = searchContext.CreateCelestialPackPlanetStream(1);
-                MotelySingleSpectralStream spectralStream = searchContext.CreateSpectralPackSpectralStream(1);
+                MotelySingleBoosterPackStream packStream = searchContext.CreateBoosterPackStream(ante);
+
+                MotelySingleTarotStream tarotStream = searchContext.CreateArcanaPackTarotStream(ante);
+                MotelySinglePlanetStream planetStream = searchContext.CreateCelestialPackPlanetStream(ante);
+                MotelySingleSpectralStream spectralStream = searchContext.CreateSpectralPackSpectralStream(ante);
+                MotelySingleStandardCardStream standardCardStream = searchContext.CreateStandardPackCardStream(ante);
 
                 for (int i = 0; i < 6; i++)
                 {
@@ -53,7 +56,9 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
                             break;
                         case MotelyBoosterPackType.Spectral:
                             Console.WriteLine(searchContext.GetNextSpectralPackContents(ref spectralStream, pack.GetPackSize()).ToString());
-
+                            break;
+                        case MotelyBoosterPackType.Standard:
+                            Console.WriteLine(searchContext.GetNextStandardPackContents(ref standardCardStream, pack.GetPackSize()).ToString());
                             break;
                     }
                 }

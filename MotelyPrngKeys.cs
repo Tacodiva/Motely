@@ -20,6 +20,14 @@ public static class MotelyPrngKeys
     public const string SpectralSoulBlackHole = "soul_";
     public const string SpectralPackItemSource = "spe";
 
+    public const string StandardCardBase = "front";
+    public const string StandardCardHasEnhancement = "stdset";
+    public const string StandardCardEnhancement = "Enhanced";
+    public const string StandardCardEdition = "standard_edition";
+    public const string StandardCardHasSeal = "stdseal";
+    public const string StandardCardSeal = "stdsealtype";
+    public const string StandardPackItemSource = "sta";
+
     public const string BuffoonJokerEternalPerishableSource = "packetper";
     public const string BuffoonJokerRentalSource = "packssjr";
 

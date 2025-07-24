@@ -87,14 +87,24 @@ public readonly struct MotelyItem(int value) : IEquatable<MotelyItem>
     {
         string stringified = Type.ToString();
 
+        if (Enhancement != MotelyItemEnhancement.None)
+        {
+            stringified = Enhancement + " " + stringified;
+        }
+
         if (Edition != MotelyItemEdition.None)
         {
             stringified = Edition + " " + stringified;
         }
-
+        
         if (IsPerishable) stringified = "Perishable " + stringified;
         if (IsEternal) stringified = "Eternal " + stringified;
         if (IsRental) stringified = "Rental " + stringified;
+
+        if (Seal != MotelyItemSeal.None)
+        {
+            stringified = Seal + " Seal " + stringified;
+        }
 
         return stringified;
     }
