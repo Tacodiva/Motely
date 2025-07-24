@@ -45,10 +45,10 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
                     switch (pack.GetPackType())
                     {
                         case MotelyBoosterPackType.Arcana:
-                            Console.WriteLine(searchContext.GetArcanaPackContents(ref tarotStream, pack.GetPackSize()).ToString());
+                            Console.WriteLine(searchContext.GetNextArcanaPackContents(ref tarotStream, pack.GetPackSize()).ToString());
                             break;
                         case MotelyBoosterPackType.Celestial:
-                            Console.WriteLine(searchContext.GetCelestialPackContents(ref planetStream, pack.GetPackSize()).ToString());
+                            Console.WriteLine(searchContext.GetNextCelestialPackContents(ref planetStream, pack.GetPackSize()).ToString());
                             break;
                     }
                 }

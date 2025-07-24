@@ -60,15 +60,18 @@ public ref struct MotelyFilterCreationContext
 
     public readonly void CacheVoucherStream(int ante, bool force = false) => CacheResampleStream(MotelyPrngKeys.Voucher + ante, force);
 
-    private readonly void CacheTarotStream(int ante, string source, bool cacheResample, bool cacheSoul, bool force)
+    private readonly void CacheTarotStream(int ante, string source, bool cacheTarot, bool cacheResample, bool cacheSoul, bool force)
     {
-        if (cacheResample)
+        if (cacheTarot)
         {
-            CacheResampleStream(MotelyPrngKeys.Tarot + source + ante, force);
-        }
-        else
-        {
-            CachePseudoHash(MotelyPrngKeys.Tarot + source + ante, force);
+            if (cacheResample)
+            {
+                CacheResampleStream(MotelyPrngKeys.Tarot + source + ante, force);
+            }
+            else
+            {
+                CachePseudoHash(MotelyPrngKeys.Tarot + source + ante, force);
+            }
         }
 
         if (cacheSoul)
@@ -77,14 +80,14 @@ public ref struct MotelyFilterCreationContext
         }
     }
 
-    public readonly void CacheArcanaPackTarotStream(int ante, bool force = false)
+    public readonly void CacheArcanaPackTarotStream(int ante, bool soulOnly = false, bool force = false)
     {
-        CacheTarotStream(ante, MotelyPrngKeys.ArcanaPackItemSource, true, true, force);
+        CacheTarotStream(ante, MotelyPrngKeys.ArcanaPackItemSource, !soulOnly, true, true, force);
     }
 
     public readonly void CacheShopTarotStream(int ante, bool force = false)
     {
-        CacheTarotStream(ante, MotelyPrngKeys.ShopItemSource, false, false, force);
+        CacheTarotStream(ante, MotelyPrngKeys.ShopItemSource, true, false, false, force);
     }
 
     private readonly void CachePlanetStream(int ante, string source, bool cacheResample, bool cacheBlackHole, bool force)
@@ -143,7 +146,7 @@ public ref struct MotelyFilterCreationContext
     public readonly void CacheShopStream(int ante, MotelyShopStreamFlags shopFlags = 0, MotelyJokerStreamFlags jokerFlags = 0, bool force = false)
     {
         CachePseudoHash(MotelyPrngKeys.ShopItemType + ante);
-        
+
         if (!shopFlags.HasFlag(MotelyShopStreamFlags.ExcludeJokers))
         {
             CacheShopJokerStream(ante, jokerFlags, force);

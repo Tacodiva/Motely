@@ -71,16 +71,10 @@ ref partial struct MotelySingleSearchContext
         CreatePlanetStream(MotelyPrngKeys.ShopItemSource, ante, false);
 
 
-    public MotelySingleItemSet GetCelestialPackContents(ref MotelySinglePlanetStream planetStream, MotelyBoosterPackSize size)
-        => GetCelestialPackContents(ref planetStream, size switch
-        {
-            MotelyBoosterPackSize.Normal => 3,
-            MotelyBoosterPackSize.Jumbo => 5,
-            MotelyBoosterPackSize.Mega => 5,
-            _ => throw new InvalidEnumArgumentException()
-        });
+    public MotelySingleItemSet GetNextCelestialPackContents(ref MotelySinglePlanetStream planetStream, MotelyBoosterPackSize size)
+        => GetNextCelestialPackContents(ref planetStream, MotelyBoosterPackType.Celestial.GetCardCount(size));
 
-    public MotelySingleItemSet GetCelestialPackContents(ref MotelySinglePlanetStream planetStream, int size)
+    public MotelySingleItemSet GetNextCelestialPackContents(ref MotelySinglePlanetStream planetStream, int size)
     {
         Debug.Assert(size <= MotelySingleItemSet.MaxLength);
 
@@ -95,7 +89,7 @@ ref partial struct MotelySingleSearchContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MotelyItem GetNextPlanet(ref MotelySinglePlanetStream planetStream)
     {
-        if (!planetStream.IsBlackHoleable)
+        if (planetStream.IsBlackHoleable)
         {
             if (GetNextRandom(ref planetStream.BlackHolePrngStream) > 0.997)
             {
@@ -109,7 +103,7 @@ ref partial struct MotelySingleSearchContext
     
     public MotelyItem GetNextPlanet(ref MotelySinglePlanetStream planetStream, in MotelySingleItemSet itemSet)
     {
-        if (!planetStream.IsBlackHoleable && !itemSet.Contains(MotelyItemType.BlackHole))
+        if (planetStream.IsBlackHoleable && !itemSet.Contains(MotelyItemType.BlackHole))
         {
             if (GetNextRandom(ref planetStream.BlackHolePrngStream) > 0.997)
             {

@@ -15,6 +15,9 @@ public struct MotelySinglePrngStream(double state)
 
 public ref struct MotelySingleResampleStream(MotelySinglePrngStream initialPrngStream, bool isCached)
 {
+
+    public static MotelySingleResampleStream Invalid => new(MotelySinglePrngStream.Invalid, false);
+
     public const int StackResampleCount = 4;
 
     [InlineArray(StackResampleCount)]
@@ -28,6 +31,8 @@ public ref struct MotelySingleResampleStream(MotelySinglePrngStream initialPrngS
     public int ResamplePrngStreamInitCount;
     public List<object>? HighResamplePrngStreams;
     public bool IsCached = isCached;
+
+    public readonly bool IsInvalid => InitialPrngStream.IsInvalid;
 }
 
 

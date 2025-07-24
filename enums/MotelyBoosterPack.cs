@@ -14,12 +14,43 @@ public enum MotelyBoosterPackType
     Spectral = 4
 }
 
+public static class MotelyBoosterPackTypeExt
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetCardCount(this MotelyBoosterPackType type, MotelyBoosterPackSize size)
+    {
+        switch (type)
+        {
+            case MotelyBoosterPackType.Arcana:
+            case MotelyBoosterPackType.Celestial:
+            case MotelyBoosterPackType.Standard:
+                return size switch
+                {
+                    MotelyBoosterPackSize.Normal => 3,
+                    MotelyBoosterPackSize.Jumbo or MotelyBoosterPackSize.Mega => 5,
+                    _ => throw new InvalidEnumArgumentException(),
+                };
+            case MotelyBoosterPackType.Buffoon:
+            case MotelyBoosterPackType.Spectral:
+                return size switch
+                {
+                    MotelyBoosterPackSize.Normal => 2,
+                    MotelyBoosterPackSize.Jumbo or MotelyBoosterPackSize.Mega => 4,
+                    _ => throw new InvalidEnumArgumentException(),
+                };
+            default:
+                throw new InvalidEnumArgumentException();
+        }
+    }
+}
+
 public enum MotelyBoosterPackSize
 {
     Normal = 0b00,
     Jumbo = 0b01,
     Mega = 0b10
 }
+
 
 public enum MotelyBoosterPack
 {
@@ -69,31 +100,7 @@ public static class MotelyBoosterPackExt
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetPackCardCount(this MotelyBoosterPack pack)
     {
-        MotelyBoosterPackType type = pack.GetPackType();
-        MotelyBoosterPackSize size = pack.GetPackSize();
-
-        switch (type)
-        {
-            case MotelyBoosterPackType.Arcana:
-            case MotelyBoosterPackType.Celestial:
-            case MotelyBoosterPackType.Standard:
-                return size switch
-                {
-                    MotelyBoosterPackSize.Normal => 3,
-                    MotelyBoosterPackSize.Jumbo or MotelyBoosterPackSize.Mega => 5,
-                    _ => throw new InvalidEnumArgumentException(),
-                };
-            case MotelyBoosterPackType.Buffoon:
-            case MotelyBoosterPackType.Spectral:
-                return size switch
-                {
-                    MotelyBoosterPackSize.Normal => 2,
-                    MotelyBoosterPackSize.Jumbo or MotelyBoosterPackSize.Mega => 4,
-                    _ => throw new InvalidEnumArgumentException(),
-                };
-            default:
-                throw new InvalidEnumArgumentException();
-        }
+        return pack.GetPackType().GetCardCount(pack.GetPackSize());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
