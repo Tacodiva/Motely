@@ -16,6 +16,10 @@ public static class MotelyPrngKeys
     public const string PlanetBlackHole = "soul_";
     public const string CelestialPackItemSource = "pl1";
 
+    public const string Spectral = "Spectral";
+    public const string SpectralSoulBlackHole = "soul_";
+    public const string SpectralPackItemSource = "spe";
+
     public const string BuffoonJokerEternalPerishableSource = "packetper";
     public const string BuffoonJokerRentalSource = "packssjr";
 

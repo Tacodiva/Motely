@@ -80,6 +80,7 @@ ref partial struct MotelySingleSearchContext
     public bool GetNextArcanaPackHasTheSoul(ref MotelySingleTarotStream tarotStream, MotelyBoosterPackSize size)
     {
         Debug.Assert(tarotStream.IsSoulable, "Tarot pack does not have the soul.");
+        Debug.Assert(tarotStream.ResampleStream.IsInvalid, "This method is only valid for arcana packs created with soul only.");
 
         int cardCount = MotelyBoosterPackType.Arcana.GetCardCount(size);
 
@@ -87,11 +88,6 @@ ref partial struct MotelySingleSearchContext
         {
             if (GetNextRandom(ref tarotStream.SoulPrngStream) > 0.997)
             {
-                // Progress the stream to get ready for the next pack
-                for (; i < cardCount; i++)
-                {
-                    GetNextPrngState(ref tarotStream.SoulPrngStream);
-                }
                 return true;
             }
         }

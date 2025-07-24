@@ -36,6 +36,10 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
             return searchContext.SearchIndividualSeeds(matching, (ref MotelySingleSearchContext searchContext) =>
             {
                 MotelySingleTarotStream tarotStream = default;
+                MotelySingleSpectralStream spectralStream = default;
+                MotelySingleJokerFixedRarityStream soulStream = default;
+
+                bool soulStreamInit = false;
 
                 MotelySingleBoosterPackStream boosterPackStream = searchContext.CreateBoosterPackStream(1, true);
 
@@ -47,13 +51,26 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
                     if (searchContext.GetNextArcanaPackHasTheSoul(ref tarotStream, pack.GetPackSize()))
                     {
-                        MotelySingleJokerFixedRarityStream stream = searchContext.CreateSoulJokerStream(1);
-                        return searchContext.GetNextJoker(ref stream).Type == MotelyItemType.Perkeo;
+                        if (!soulStreamInit) soulStream = searchContext.CreateSoulJokerStream(1);
+                        return searchContext.GetNextJoker(ref soulStream).Type == MotelyItemType.Perkeo;
                     }
                 }
 
+                if (pack.GetPackType() == MotelyBoosterPackType.Spectral)
+                {
+                    spectralStream = searchContext.CreateSpectralPackSpectralStream(1, false);
+
+                    if (searchContext.GetNextSpectralPackHasTheSoul(ref spectralStream, pack.GetPackSize()))
+                    {
+                        if (!soulStreamInit) soulStream = searchContext.CreateSoulJokerStream(1);
+                        return searchContext.GetNextJoker(ref soulStream).Type == MotelyItemType.Perkeo;
+                    }
+
+                }
+
                 boosterPackStream = searchContext.CreateBoosterPackStream(2);
-                bool tarotStreamInit = false;
+                bool tarotStreamInit = false, spectralStreamInit = false;
+                soulStreamInit = false;
 
                 for (int i = 0; i < 3; i++)
                 {
@@ -69,8 +86,23 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
                         if (searchContext.GetNextArcanaPackHasTheSoul(ref tarotStream, pack.GetPackSize()))
                         {
-                            MotelySingleJokerFixedRarityStream stream = searchContext.CreateSoulJokerStream(2);
-                            return searchContext.GetNextJoker(ref stream).Type == MotelyItemType.Perkeo;
+                        if (!soulStreamInit) soulStream = searchContext.CreateSoulJokerStream(2);
+                            return searchContext.GetNextJoker(ref soulStream).Type == MotelyItemType.Perkeo;
+                        }
+                    }
+
+                    if (pack.GetPackType() == MotelyBoosterPackType.Spectral)
+                    {
+                        if (!spectralStreamInit)
+                        {
+                            spectralStreamInit = true;
+                            spectralStream = searchContext.CreateSpectralPackSpectralStream(2, true);
+                        }
+
+                        if (searchContext.GetNextSpectralPackHasTheSoul(ref spectralStream, pack.GetPackSize()))
+                        {
+                        if (!soulStreamInit) soulStream = searchContext.CreateSoulJokerStream(2);
+                            return searchContext.GetNextJoker(ref soulStream).Type == MotelyItemType.Perkeo;
                         }
                     }
                 }

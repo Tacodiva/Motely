@@ -14,10 +14,12 @@ public ref struct MotelySingleShopItemStream
     public MotelySingleJokerStream JokerStream;
     public MotelySingleTarotStream TarotStream;
     public MotelySinglePlanetStream PlanetStream;
+    public MotelySingleSpectralStream SpectralStream;
 
     public readonly bool DoesProvideJokers => !JokerStream.IsNull;
     public readonly bool DoesProvideTarots => !TarotStream.IsNull;
     public readonly bool DoesProvidePlanets => !PlanetStream.IsNull;
+    public readonly bool DoesProvideSpectrals => !SpectralStream.IsNull;
 }
 
 [Flags]
@@ -25,7 +27,8 @@ public enum MotelyShopStreamFlags
 {
     ExcludeJokers = 1 << 1,
     ExcludeTarots = 1 << 2,
-    ExcludePlanets = 1 << 3
+    ExcludePlanets = 1 << 3,
+    ExcludeSpectrals = 1 << 4
 }
 
 unsafe ref partial struct MotelySingleSearchContext
@@ -42,15 +45,25 @@ unsafe ref partial struct MotelySingleSearchContext
         MotelySingleShopItemStream stream = new()
         {
             ItemTypeStream = CreatePrngStream(MotelyPrngKeys.ShopItemType + ante),
-            JokerStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeJokers) ? default : CreateShopJokerStream(ante, jokerFlags),
-            TarotStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeTarots) ? default : CreateShopTarotStream(ante),
-            PlanetStream = flags.HasFlag(MotelyShopStreamFlags.ExcludePlanets) ? default : CreateShopPlanetStream(ante),
+            JokerStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeJokers) ?
+                default : CreateShopJokerStream(ante, jokerFlags),
+            TarotStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeTarots) ?
+                default : CreateShopTarotStream(ante),
+            PlanetStream = flags.HasFlag(MotelyShopStreamFlags.ExcludePlanets) ?
+                default : CreateShopPlanetStream(ante),
+            SpectralStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeSpectrals) || Deck != MotelyDeck.Ghost ?
+                default : CreateShopSpectralStream(ante),
 
             TarotRate = 4,
             PlanetRate = 4,
             PlayingCardRate = 0,
             SpectralRate = 0,
         };
+
+        if (Deck == MotelyDeck.Ghost)
+        {
+            stream.SpectralRate = 2;
+        }
 
         stream.TotalRate = ShopJokerRate + stream.TarotRate + stream.PlanetRate + stream.PlayingCardRate + stream.SpectralRate;
 
@@ -97,11 +110,14 @@ unsafe ref partial struct MotelySingleSearchContext
         if (itemTypePoll < stream.PlayingCardRate)
         {
             // This shop will generate a playing card
-            return new(MotelyItemType.Invalid);
+            return new(MotelyItemType.NotImplemented);
         }
 
         // This shop will generate a spectral card
-        return new(MotelyItemType.Invalid);
+        if (!stream.DoesProvideSpectrals)
+            return new(MotelyItemType.SpectralExcludedByStream);
+
+        return GetNextSpectral(ref stream.SpectralStream);
 
     }
 }

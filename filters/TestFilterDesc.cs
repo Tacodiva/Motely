@@ -35,6 +35,7 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
 
                 MotelySingleTarotStream tarotStream = searchContext.CreateArcanaPackTarotStream(1);
                 MotelySinglePlanetStream planetStream = searchContext.CreateCelestialPackPlanetStream(1);
+                MotelySingleSpectralStream spectralStream = searchContext.CreateSpectralPackSpectralStream(1);
 
                 for (int i = 0; i < 6; i++)
                 {
@@ -49,6 +50,10 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
                             break;
                         case MotelyBoosterPackType.Celestial:
                             Console.WriteLine(searchContext.GetNextCelestialPackContents(ref planetStream, pack.GetPackSize()).ToString());
+                            break;
+                        case MotelyBoosterPackType.Spectral:
+                            Console.WriteLine(searchContext.GetNextSpectralPackContents(ref spectralStream, pack.GetPackSize()).ToString());
+
                             break;
                     }
                 }

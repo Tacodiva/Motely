@@ -6,7 +6,8 @@ internal enum InternalInvalid {
 
     JokerExcludedByStream,
     PlanetExcludedByStream,
-    TarotExcludedByStream
+    TarotExcludedByStream,
+    SpectralExcludedByStream,
 }
 
 public enum MotelyItemType
@@ -290,5 +291,6 @@ public enum MotelyItemType
     JokerExcludedByStream = MotelyItemTypeCategory.Invalid | InternalInvalid.JokerExcludedByStream,
     PlanetExcludedByStream = MotelyItemTypeCategory.Invalid | InternalInvalid.PlanetExcludedByStream,
     TarotExcludedByStream = MotelyItemTypeCategory.Invalid | InternalInvalid.TarotExcludedByStream,
+    SpectralExcludedByStream = MotelyItemTypeCategory.Invalid | InternalInvalid.SpectralExcludedByStream,
 }
 
