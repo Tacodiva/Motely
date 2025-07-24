@@ -1,5 +1,6 @@
 
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Motely;
 
@@ -75,5 +76,22 @@ public ref struct MotelySingleItemSet
         }
 
         return false;
+    }
+
+    public override string ToString()
+    {
+        StringBuilder sb = new();
+
+        sb.Append('[');
+
+        for (int i = 0; i < Length; i++)
+        {
+            if (i != 0) sb.Append(", ");
+            sb.Append(GetItemRef(ref this, i).ToString());
+        }
+
+        sb.Append(']');
+
+        return sb.ToString();
     }
 }

@@ -21,11 +21,6 @@ public class Motely
     public const int JokerRarityOffset = 10;
     public const int JokerRarityMask = 0b11 << JokerRarityOffset;
 
-    public const int JokerEternalStickerNotSupportedOffset = 9;
-    public const int JokerEternalStickerNotSupportedMask = 1 << JokerEternalStickerNotSupportedOffset;
-    public const int JokerPerishableStickerNotSupportedOffset = 8;
-    public const int JokerPerishableStickerNotSupportedMask = 1 << JokerPerishableStickerNotSupportedOffset;
-
     public const int ItemSealOffset = 16;
     public const int ItemSealMask = 0b111 << ItemSealOffset;
 
@@ -36,7 +31,8 @@ public class Motely
     public const int ItemEditionMask = 0b111 << ItemEditionOffset;
 
     public const int BoosterPackTypeOffset = 2;
-    public const int BoosterPackSizeMask = 0b11 << BoosterPackTypeOffset;
+    public const int BoosterPackTypeMask = 0b11 << BoosterPackTypeOffset;
+    public const int BoosterPackSizeMask = 0b11;
 
     public const int PerishableStickerOffset = 31;
     public const int EternalStickerOffset = 30;

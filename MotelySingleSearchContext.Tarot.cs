@@ -8,6 +8,7 @@ namespace Motely;
 
 public ref struct MotelySingleTarotStream(string resampleKey, MotelySingleResampleStream resampleStream, MotelySinglePrngStream soulStream)
 {
+    public readonly bool IsNull => ResampleKey == null;
     public readonly string ResampleKey = resampleKey;
     public MotelySingleResampleStream ResampleStream = resampleStream;
     public MotelySinglePrngStream SoulPrngStream = soulStream;

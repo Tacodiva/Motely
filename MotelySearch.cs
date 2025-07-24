@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -59,12 +60,105 @@ public ref struct MotelyFilterCreationContext
 
     public readonly void CacheVoucherStream(int ante, bool force = false) => CacheResampleStream(MotelyPrngKeys.Voucher + ante, force);
 
-    public readonly void CacheTarotStream(int ante, bool force = false)
+    private readonly void CacheTarotStream(int ante, string source, bool cacheResample, bool cacheSoul, bool force)
     {
-        CacheResampleStream(MotelyPrngKeys.Tarot + MotelyPrngKeys.ArcanaPackItemSource + ante, force);
-        CachePseudoHash(MotelyPrngKeys.TerrotSoul + MotelyPrngKeys.Tarot + ante, force);
+        if (cacheResample)
+        {
+            CacheResampleStream(MotelyPrngKeys.Tarot + source + ante, force);
+        }
+        else
+        {
+            CachePseudoHash(MotelyPrngKeys.Tarot + source + ante, force);
+        }
+
+        if (cacheSoul)
+        {
+            CachePseudoHash(MotelyPrngKeys.TerrotSoul + MotelyPrngKeys.Tarot + ante, force);
+        }
     }
 
+    public readonly void CacheArcanaPackTarotStream(int ante, bool force = false)
+    {
+        CacheTarotStream(ante, MotelyPrngKeys.ArcanaPackItemSource, true, true, force);
+    }
+
+    public readonly void CacheShopTarotStream(int ante, bool force = false)
+    {
+        CacheTarotStream(ante, MotelyPrngKeys.ShopItemSource, false, false, force);
+    }
+
+    private readonly void CachePlanetStream(int ante, string source, bool cacheResample, bool cacheBlackHole, bool force)
+    {
+        if (cacheResample)
+        {
+            CacheResampleStream(MotelyPrngKeys.Planet + source + ante, force);
+        }
+        else
+        {
+            CachePseudoHash(MotelyPrngKeys.Planet + source + ante, force);
+        }
+
+        if (cacheBlackHole)
+        {
+            CachePseudoHash(MotelyPrngKeys.PlanetBlackHole + MotelyPrngKeys.Planet + ante, force);
+        }
+    }
+
+    public readonly void CacheCelestialPackPlanetStream(int ante, bool force = false)
+    {
+        CachePlanetStream(ante, MotelyPrngKeys.CelestialPackItemSource, true, true, force);
+    }
+
+    public readonly void CacheShopPlanetStream(int ante, bool force = false)
+    {
+        CachePlanetStream(ante, MotelyPrngKeys.ShopItemSource, true, true, force);
+    }
+
+    public readonly void CacheShopJokerStream(int ante, MotelyJokerStreamFlags flags = 0, bool force = false)
+    {
+
+        if (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeEdition))
+        {
+            CachePseudoHash(MotelyPrngKeys.JokerEdition + MotelyPrngKeys.ShopItemSource + ante, force);
+        }
+
+        if (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeStickers))
+        {
+            if (Stake >= MotelyStake.Black)
+            {
+                CachePseudoHash(MotelyPrngKeys.ShopJokerEternalPerishableSource + ante, force);
+
+                if (Stake >= MotelyStake.Gold)
+                {
+                    CachePseudoHash(MotelyPrngKeys.ShopJokerRentalSource + ante, force);
+                }
+            }
+        }
+
+        // TODO Cache the common joker stream?
+
+        CachePseudoHash(MotelyPrngKeys.JokerRarity + MotelyPrngKeys.ShopItemSource + ante, force);
+    }
+
+    public readonly void CacheShopStream(int ante, MotelyShopStreamFlags shopFlags = 0, MotelyJokerStreamFlags jokerFlags = 0, bool force = false)
+    {
+        CachePseudoHash(MotelyPrngKeys.ShopItemType + ante);
+        
+        if (!shopFlags.HasFlag(MotelyShopStreamFlags.ExcludeJokers))
+        {
+            CacheShopJokerStream(ante, jokerFlags, force);
+        }
+
+        if (!shopFlags.HasFlag(MotelyShopStreamFlags.ExcludeTarots))
+        {
+            CacheShopTarotStream(ante, force);
+        }
+
+        if (!shopFlags.HasFlag(MotelyShopStreamFlags.ExcludePlanets))
+        {
+            CacheShopPlanetStream(ante, force);
+        }
+    }
 }
 
 public interface IMotelySeedFilterDesc

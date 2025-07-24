@@ -15,7 +15,7 @@ public struct MotelySinglePrngStream(double state)
 
 public ref struct MotelySingleResampleStream(MotelySinglePrngStream initialPrngStream, bool isCached)
 {
-    public const int StackResampleCount = 16;
+    public const int StackResampleCount = 4;
 
     [InlineArray(StackResampleCount)]
     public struct MotelyResampleStreams
@@ -173,6 +173,7 @@ public unsafe ref partial struct MotelySingleSearchContext
 #endif
     public double GetNextPrngState(ref MotelySinglePrngStream stream)
     {
+        Debug.Assert(!stream.IsInvalid, "Invalid stream.");
         return stream.State = IteratePRNG(stream.State);
     }
 

@@ -21,6 +21,8 @@ public readonly struct MotelyItem(int value) : IEquatable<MotelyItem>
     public readonly bool IsEternal => (Value & (1 << Motely.EternalStickerOffset)) != 0;
     public readonly bool IsRental => (Value & (1 << Motely.RentalStickerOffset)) != 0;
 
+    public readonly bool IsInvalid => TypeCategory == MotelyItemTypeCategory.Invalid;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MotelyItem(MotelyItemType type) : this((int)type) { }
 
@@ -31,7 +33,7 @@ public readonly struct MotelyItem(int value) : IEquatable<MotelyItem>
     { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public MotelyItem(MotelyJoker joker, MotelyItemEdition edition) : this(
+    public MotelyItem(MotelyJoker joker, MotelyItemEdition edition = MotelyItemEdition.None) : this(
         (int)joker | (int)MotelyItemTypeCategory.Joker | (int)edition
     )
     { }

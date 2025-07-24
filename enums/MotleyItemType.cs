@@ -1,5 +1,14 @@
 namespace Motely;
 
+internal enum InternalInvalid {
+    Invalid,
+    NotImplemented,
+
+    JokerExcludedByStream,
+    PlanetExcludedByStream,
+    TarotExcludedByStream
+}
+
 public enum MotelyItemType
 {
     // Planet Cards
@@ -274,5 +283,12 @@ public enum MotelyItemType
     Yorick = MotelyItemTypeCategory.Joker | MotelyJoker.Yorick,
     Chicot = MotelyItemTypeCategory.Joker | MotelyJoker.Chicot,
     Perkeo = MotelyItemTypeCategory.Joker | MotelyJoker.Perkeo,
+
+    // Special
+    Invalid = MotelyItemTypeCategory.Invalid | InternalInvalid.Invalid,
+    NotImplemented = MotelyItemTypeCategory.Invalid | InternalInvalid.NotImplemented,
+    JokerExcludedByStream = MotelyItemTypeCategory.Invalid | InternalInvalid.JokerExcludedByStream,
+    PlanetExcludedByStream = MotelyItemTypeCategory.Invalid | InternalInvalid.PlanetExcludedByStream,
+    TarotExcludedByStream = MotelyItemTypeCategory.Invalid | InternalInvalid.TarotExcludedByStream,
 }
 

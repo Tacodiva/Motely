@@ -8,6 +8,7 @@ namespace Motely;
 
 public ref struct MotelySinglePlanetStream(string resampleKey, MotelySingleResampleStream resampleStream, MotelySinglePrngStream blackHoleStream)
 {
+    public readonly bool IsNull => ResampleKey == null;
     public readonly string ResampleKey = resampleKey;
     public MotelySingleResampleStream ResampleStream = resampleStream;
     public MotelySinglePrngStream BlackHolePrngStream = blackHoleStream;
@@ -47,14 +48,14 @@ ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public MotelySinglePlanetStream CreateCelestialPackStreamCached(int ante) =>
+    public MotelySinglePlanetStream CreateCelestialPackPlanetStreamCached(int ante) =>
         CreatePlanetStreamCached(MotelyPrngKeys.CelestialPackItemSource, ante, true);
 
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public MotelySinglePlanetStream CreateCelestialPackStream(int ante) =>
+    public MotelySinglePlanetStream CreateCelestialPackPlanetStream(int ante) =>
         CreatePlanetStream(MotelyPrngKeys.CelestialPackItemSource, ante, true);
 
 #if !DEBUG
@@ -93,8 +94,19 @@ ref partial struct MotelySingleSearchContext
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MotelyItem GetNextPlanet(ref MotelySinglePlanetStream planetStream)
-        => GetNextPlanet(ref planetStream, MotelySingleItemSet.Empty);
+    {
+        if (!planetStream.IsBlackHoleable)
+        {
+            if (GetNextRandom(ref planetStream.BlackHolePrngStream) > 0.997)
+            {
+                return MotelyItemType.BlackHole;
+            }
+        }
 
+        return (MotelyItemType)MotelyItemTypeCategory.PlanetCard |
+            (MotelyItemType)GetNextRandomInt(ref planetStream.ResampleStream.InitialPrngStream, 0, MotelyEnum<MotelyPlanetCard>.ValueCount);
+    }
+    
     public MotelyItem GetNextPlanet(ref MotelySinglePlanetStream planetStream, in MotelySingleItemSet itemSet)
     {
         if (!planetStream.IsBlackHoleable && !itemSet.Contains(MotelyItemType.BlackHole))

@@ -35,6 +35,4 @@ ref partial struct MotelySingleSearchContext
 
         return MotelyWeightedPools.BoosterPacks.Choose(GetNextRandom(ref stream.PrngStream));
     }
-
-
 }

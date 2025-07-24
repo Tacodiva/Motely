@@ -1,4 +1,6 @@
 
+using System.Runtime.CompilerServices;
+
 namespace Motely;
 
 public ref struct MotelySingleShopItemStream
@@ -12,6 +14,18 @@ public ref struct MotelySingleShopItemStream
     public MotelySingleJokerStream JokerStream;
     public MotelySingleTarotStream TarotStream;
     public MotelySinglePlanetStream PlanetStream;
+
+    public readonly bool DoesProvideJokers => !JokerStream.IsNull;
+    public readonly bool DoesProvideTarots => !TarotStream.IsNull;
+    public readonly bool DoesProvidePlanets => !PlanetStream.IsNull;
+}
+
+[Flags]
+public enum MotelyShopStreamFlags
+{
+    ExcludeJokers = 1 << 1,
+    ExcludeTarots = 1 << 2,
+    ExcludePlanets = 1 << 3
 }
 
 unsafe ref partial struct MotelySingleSearchContext
@@ -22,16 +36,16 @@ unsafe ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public MotelySingleShopItemStream CreateShopItemStream(int ante)
+    public MotelySingleShopItemStream CreateShopItemStream(int ante, MotelyShopStreamFlags flags = 0, MotelyJokerStreamFlags jokerFlags = 0)
     {
 
         MotelySingleShopItemStream stream = new()
         {
             ItemTypeStream = CreatePrngStream(MotelyPrngKeys.ShopItemType + ante),
-            JokerStream = CreateShopJokerStream(ante),
-            TarotStream = CreateShopTarotStream(ante),
-            PlanetStream = CreateShopPlanetStream(ante),
-            
+            JokerStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeJokers) ? default : CreateShopJokerStream(ante, jokerFlags),
+            TarotStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeTarots) ? default : CreateShopTarotStream(ante),
+            PlanetStream = flags.HasFlag(MotelyShopStreamFlags.ExcludePlanets) ? default : CreateShopPlanetStream(ante),
+
             TarotRate = 4,
             PlanetRate = 4,
             PlayingCardRate = 0,
@@ -52,6 +66,9 @@ unsafe ref partial struct MotelySingleSearchContext
 
         if (itemTypePoll < ShopJokerRate)
         {
+            if (!stream.DoesProvideJokers)
+                return new(MotelyItemType.JokerExcludedByStream);
+
             return GetNextJoker(ref stream.JokerStream);
         }
 
@@ -59,6 +76,9 @@ unsafe ref partial struct MotelySingleSearchContext
 
         if (itemTypePoll < stream.TarotRate)
         {
+            if (!stream.DoesProvideTarots)
+                return new(MotelyItemType.TarotExcludedByStream);
+
             return GetNextTarot(ref stream.TarotStream);
         }
 
@@ -66,6 +86,9 @@ unsafe ref partial struct MotelySingleSearchContext
 
         if (itemTypePoll < stream.PlanetRate)
         {
+            if (!stream.DoesProvidePlanets)
+                return new(MotelyItemType.PlanetExcludedByStream);
+
             return GetNextPlanet(ref stream.PlanetStream);
         }
 
@@ -74,11 +97,11 @@ unsafe ref partial struct MotelySingleSearchContext
         if (itemTypePoll < stream.PlayingCardRate)
         {
             // This shop will generate a playing card
-            return new(MotelyItemType.HA);
+            return new(MotelyItemType.Invalid);
         }
 
         // This shop will generate a spectral card
-        return new(MotelyItemType.Immolate);
+        return new(MotelyItemType.Invalid);
 
     }
 }
