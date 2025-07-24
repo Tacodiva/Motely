@@ -109,6 +109,28 @@ public ref struct MotelyFilterCreationContext
         CachePlanetStream(ante, MotelyPrngKeys.ShopItemSource, true, true, force);
     }
 
+    public readonly void CacheStandardPackStream(int ante, MotelyStandardCardStreamFlags flags = 0, bool force = false)
+    {
+        CachePseudoHash(MotelyPrngKeys.StandardCardBase + MotelyPrngKeys.StandardPackItemSource + ante, force);
+
+        if (!flags.HasFlag(MotelyStandardCardStreamFlags.ExcludeEnhancement))
+        {
+            CachePseudoHash(MotelyPrngKeys.StandardCardHasEnhancement + ante, force);
+            CachePseudoHash(MotelyPrngKeys.StandardCardEnhancement + MotelyPrngKeys.StandardPackItemSource + ante, force);
+        }
+
+        if (!flags.HasFlag(MotelyStandardCardStreamFlags.ExcludeEdition))
+        {
+            CachePseudoHash(MotelyPrngKeys.StandardCardEdition + ante, force);
+        }
+
+        if (!flags.HasFlag(MotelyStandardCardStreamFlags.ExcludeSeal))
+        {
+            CachePseudoHash(MotelyPrngKeys.StandardCardHasSeal + ante, force);
+            CachePseudoHash(MotelyPrngKeys.StandardCardSeal + ante, force);
+        }
+    }
+
     public readonly void CacheShopJokerStream(int ante, MotelyJokerStreamFlags flags = 0, bool force = false)
     {
 

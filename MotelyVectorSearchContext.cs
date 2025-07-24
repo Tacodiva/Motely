@@ -8,6 +8,11 @@ namespace Motely;
 public struct MotelyVectorPrngStream(Vector512<double> state)
 {
     public Vector512<double> State = state;
+
+    public MotelySinglePrngStream GetSingleStream(int lane)
+    {
+        return new MotelySinglePrngStream(State[lane]);
+    }
 }
 
 public ref struct MotelyVectorResampleStream(MotelyVectorPrngStream initialPrngStream, bool isCached)

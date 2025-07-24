@@ -65,6 +65,15 @@ unsafe ref partial struct MotelySingleSearchContext
             stream.SpectralRate = 2;
         }
 
+        if (Deck == MotelyDeck.Zodiac)
+        {
+            // Tarot merchent
+            stream.TarotRate = 9.6;
+            
+            // Planet merchent
+            stream.PlanetRate = 9.6;
+        }
+
         stream.TotalRate = ShopJokerRate + stream.TarotRate + stream.PlanetRate + stream.PlayingCardRate + stream.SpectralRate;
 
         return stream;
