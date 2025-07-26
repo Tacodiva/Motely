@@ -2,7 +2,7 @@ namespace Motely;
 
 public class Motely
 {
-    public const int MaxCachedPseudoHashKeyLength = 20;
+    public const int MaxCachedPseudoHashKeyLength = 32;
 
     public static readonly char[] SeedDigits = [.. "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
     public const int MaxSeedLength = 8;

@@ -9,7 +9,7 @@ public struct MotelyVectorPrngStream(Vector512<double> state)
 {
     public Vector512<double> State = state;
 
-    public MotelySinglePrngStream GetSingleStream(int lane)
+    public readonly MotelySinglePrngStream GetSingleStream(int lane)
     {
         return new MotelySinglePrngStream(State[lane]);
     }
@@ -34,9 +34,9 @@ public ref struct MotelyVectorResampleStream(MotelyVectorPrngStream initialPrngS
 
 public delegate bool MotelyIndividualSeedSearcher(ref MotelySingleSearchContext searchContext);
 
-internal unsafe struct MotelySearchContextParams(in SeedHashCache seedHashCache, int seedLength, int firstCharactersLength, char* seedFirstCharacters, Vector512<double>* seedLastCharacters, bool isAdditionalFilter = false)
+internal unsafe readonly struct MotelySearchContextParams(PartialSeedHashCache* seedHashCache, int seedLength, int firstCharactersLength, char* seedFirstCharacters, Vector512<double>* seedLastCharacters, bool isAdditionalFilter = false)
 {
-    public SeedHashCache SeedHashCache = seedHashCache;
+    public readonly PartialSeedHashCache* SeedHashCache = seedHashCache;
     public readonly int SeedLength = seedLength;
     public readonly int SeedFirstCharactersLength = firstCharactersLength;
     public readonly int SeedLastCharactersLength => SeedLength - SeedFirstCharactersLength;
@@ -92,21 +92,21 @@ internal unsafe struct MotelySearchContextParams(in SeedHashCache seedHashCache,
     }
 }
 
-public unsafe ref partial struct MotelyVectorSearchContext
+public readonly unsafe ref partial struct MotelyVectorSearchContext
 {
     private readonly ref readonly MotelySearchParameters _searchParameters;
     private readonly ref readonly MotelySearchContextParams _contextParams;
 
-    public readonly MotelyStake Stake => _searchParameters.Stake;
-    public readonly MotelyDeck Deck => _searchParameters.Deck;
+    public MotelyStake Stake => _searchParameters.Stake;
+    public MotelyDeck Deck => _searchParameters.Deck;
 
-    private readonly ref readonly SeedHashCache SeedHashCache => ref _contextParams.SeedHashCache;
-    private readonly int SeedLength => _contextParams.SeedLength;
-    private readonly char* SeedFirstCharacters => _contextParams.SeedFirstCharacters;
-    private readonly int SeedFirstCharactersLength => _contextParams.SeedFirstCharactersLength;
-    private readonly int SeedLastCharactersLength => _contextParams.SeedLastCharactersLength;
-    private readonly Vector512<double>* SeedLastCharacters => _contextParams.SeedLastCharacters;
-    private readonly bool IsAdditionalFilter => _contextParams.IsAdditionalFilter;
+    private PartialSeedHashCache* SeedHashCache => _contextParams.SeedHashCache;
+    private int SeedLength => _contextParams.SeedLength;
+    private char* SeedFirstCharacters => _contextParams.SeedFirstCharacters;
+    private int SeedFirstCharactersLength => _contextParams.SeedFirstCharactersLength;
+    private int SeedLastCharactersLength => _contextParams.SeedLastCharactersLength;
+    private Vector512<double>* SeedLastCharacters => _contextParams.SeedLastCharacters;
+    private bool IsAdditionalFilter => _contextParams.IsAdditionalFilter;
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -118,13 +118,13 @@ public unsafe ref partial struct MotelyVectorSearchContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool IsLaneValid(int lane) => _contextParams.IsLaneValid(lane);
+    public bool IsLaneValid(int lane) => _contextParams.IsLaneValid(lane);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly string GetSeed(int lane) => _contextParams.GetSeed(lane);
+    public string GetSeed(int lane) => _contextParams.GetSeed(lane);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly int GetSeed(int lane, char* output) => _contextParams.GetSeed(lane, output);
+    public int GetSeed(int lane, char* output) => _contextParams.GetSeed(lane, output);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VectorMask SearchIndividualSeeds(MotelyIndividualSeedSearcher searcher)
@@ -182,17 +182,17 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public readonly Vector512<double> PseudoHashCached(string key)
+    public Vector512<double> PseudoHashCached(string key)
     {
         if (IsAdditionalFilter)
         {
             // If we are an additional filter, we can't guarantee that our cached pseudo hashes are actually cached
-            if (!SeedHashCache.HasPartialHash(key.Length))
+            if (!SeedHashCache->HasPartialHash(key.Length))
                 return InternalPseudoHash(key);
         }
 
 #if DEBUG
-        if (!SeedHashCache.HasPartialHash(key.Length))
+        if (!SeedHashCache->HasPartialHash(key.Length))
             throw new KeyNotFoundException("Cache does not contain key :c");
 #endif
 
@@ -202,43 +202,30 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private readonly Vector512<double> InternalPseudoHashCached(string key)
+    private Vector512<double> InternalPseudoHashCached(string key)
     {
-        Vector512<double> calcVector = SeedHashCache.GetPartialHashVector(key.Length);
-
-        for (int i = key.Length - 1; i >= 0; i--)
-        {
-            calcVector = Vector512.Divide(Vector512.Create(1.1239285023), calcVector);
-
-            calcVector = Vector512.Multiply(calcVector, key[i]);
-
-            calcVector = Vector512.Multiply(calcVector, Math.PI);
-            calcVector = Vector512.Add(calcVector, Vector512.Create((i + 1) * Math.PI));
-
-            Vector512<double> intPart = Vector512.Floor(calcVector);
-            calcVector = Vector512.Subtract(calcVector, intPart);
-        }
-
-        return calcVector;
+        return InternalPseudoHash(key, SeedHashCache->GetPartialHashVector(key.Length));
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public readonly Vector512<double> PseudoHash(string key)
+    public Vector512<double> PseudoHash(string key)
     {
-        if (SeedHashCache.HasPartialHash(key.Length))
+        if (SeedHashCache->HasPartialHash(key.Length))
         {
+            Console.WriteLine("has partial hash");
             return InternalPseudoHashCached(key);
         }
 
+        Console.WriteLine("caching pseudo hash");
         return InternalPseudoHash(key);
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private readonly Vector512<double> InternalPseudoHash(string key)
+    private Vector512<double> InternalPseudoHash(string key)
     {
         int seedLastCharacterLength = SeedLastCharactersLength;
         double num = 1;
@@ -265,21 +252,34 @@ public unsafe ref partial struct MotelyVectorSearchContext
             numVector = Vector512.Subtract(numVector, intPart);
         }
 
-        // Now finally the actual key
-        for (int i = key.Length - 1; i >= 0; i--)
+        // Cache the partial pseudohash we've calculated
+        if (key.Length < Motely.MaxCachedPseudoHashKeyLength)
         {
-            numVector = Vector512.Divide(Vector512.Create(1.1239285023), numVector);
-
-            numVector = Vector512.Multiply(numVector, key[i]);
-
-            numVector = Vector512.Multiply(numVector, Math.PI);
-            numVector = Vector512.Add(numVector, Vector512.Create((i + 1) * Math.PI));
-
-            Vector512<double> intPart = Vector512.Floor(numVector);
-            numVector = Vector512.Subtract(numVector, intPart);
+            SeedHashCache->CachePartialHash(key.Length, numVector);
         }
 
-        return numVector;
+        return InternalPseudoHash(key, numVector);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static Vector512<double> InternalPseudoHash(string key, Vector512<double> partialHash)
+    {
+        for (int i = key.Length - 1; i >= 0; i--)
+        {
+            partialHash = Vector512.Divide(Vector512.Create(1.1239285023), partialHash);
+
+            partialHash = Vector512.Multiply(partialHash, key[i]);
+
+            partialHash = Vector512.Multiply(partialHash, Math.PI);
+            partialHash = Vector512.Add(partialHash, Vector512.Create((i + 1) * Math.PI));
+
+            Vector512<double> intPart = Vector512.Floor(partialHash);
+            partialHash = Vector512.Subtract(partialHash, intPart);
+        }
+
+        return partialHash;
     }
 
 #if !DEBUG
@@ -338,7 +338,7 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #endif
     public Vector512<double> IteratePseudoSeed(ref MotelyVectorPrngStream stream)
     {
-        return (GetNextPrngState(ref stream) + SeedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
+        return (GetNextPrngState(ref stream) + SeedHashCache->GetSeedHashVector()) / Vector512.Create<double>(2);
     }
 
 #if !DEBUG
@@ -346,7 +346,7 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #endif
     public Vector512<double> IteratePseudoSeed(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
     {
-        return (GetNextPrngState(ref stream, mask) + SeedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
+        return (GetNextPrngState(ref stream, mask) + SeedHashCache->GetSeedHashVector()) / Vector512.Create<double>(2);
     }
 
 #if !DEBUG
@@ -354,7 +354,7 @@ public unsafe ref partial struct MotelyVectorSearchContext
 #endif
     public Vector512<double> GetNextPseudoSeed(ref MotelyVectorPrngStream stream, in Vector512<double> mask)
     {
-        return (GetNextPrngState(ref stream, mask) + SeedHashCache.GetSeedHashVector()) / Vector512.Create<double>(2);
+        return (GetNextPrngState(ref stream, mask) + SeedHashCache->GetSeedHashVector()) / Vector512.Create<double>(2);
     }
 
 #if !DEBUG

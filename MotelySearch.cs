@@ -166,6 +166,7 @@ public sealed class MotelySearchSettings<TBaseFilter>(IMotelySeedFilterDesc<TBas
     }
 }
 
+
 public interface IMotelySearch : IDisposable
 {
     public MotelySearchStatus Status { get; }
@@ -174,6 +175,12 @@ public interface IMotelySearch : IDisposable
 
     public void Start();
     public void Pause();
+}
+
+internal unsafe interface IInternalMotelySearch : IMotelySearch
+{
+    internal int PseudoHashKeyLengthCount { get; }
+    internal int* PseudoHashKeyLengths { get; }
 }
 
 public enum MotelySearchStatus
@@ -190,7 +197,7 @@ public struct MotelySearchParameters
     public MotelyDeck Deck;
 }
 
-public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
+public unsafe sealed class MotelySearch<TBaseFilter> : IInternalMotelySearch
     where TBaseFilter : struct, IMotelySeedFilter
 {
 
@@ -207,14 +214,17 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
     private readonly IMotelySeedFilter[] _additionalFilters;
 
     private readonly int _pseudoHashKeyLengthCount;
+    int IInternalMotelySearch.PseudoHashKeyLengthCount => _pseudoHashKeyLengthCount;
     private readonly int* _pseudoHashKeyLengths;
-    private readonly int* _pseudoHashReverseMap;
+    int* IInternalMotelySearch.PseudoHashKeyLengths => _pseudoHashKeyLengths;
 
     private readonly int _startBatchIndex;
     private int _batchIndex;
     public int BatchIndex => _batchIndex;
     private int _completedBatchCount;
     public int CompletedBatchCount => _completedBatchCount;
+
+
 
     private double _lastReportMS;
 
@@ -261,16 +271,6 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
         for (int i = 0; i < _pseudoHashKeyLengthCount; i++)
         {
             _pseudoHashKeyLengths[i] = pseudohashKeyLengths[i];
-        }
-
-        _pseudoHashReverseMap = (int*)Marshal.AllocHGlobal(sizeof(int) * Motely.MaxCachedPseudoHashKeyLength);
-
-        for (int i = 0; i < Motely.MaxCachedPseudoHashKeyLength; i++)
-            _pseudoHashReverseMap[i] = -1;
-
-        for (int i = 0; i < _pseudoHashKeyLengthCount; i++)
-        {
-            _pseudoHashReverseMap[_pseudoHashKeyLengths[i]] = i;
         }
 
         _pauseBarrier = new(settings.ThreadCount + 1);
@@ -382,7 +382,6 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
         }
 
         Marshal.FreeHGlobal((nint)_pseudoHashKeyLengths);
-        Marshal.FreeHGlobal((nint)_pseudoHashReverseMap);
 
         GC.SuppressFinalize(this);
     }
@@ -416,7 +415,8 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
         private struct FilterSeedBatch
         {
             public FilterSeedBatchCharacters SeedCharacters;
-            public Vector512<double>* SeedHashCache;
+            public Vector512<double>* SeedHashes;
+            public PartialSeedHashCache SeedHashCache;
             public int SeedLength;
             public int SeedCount;
             public long WaitStartMS;
@@ -442,10 +442,14 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
 
                 for (int i = 0; i < search._additionalFilters.Length; i++)
                 {
-                    _filterSeedBatches[i] = new()
+                    FilterSeedBatch* batch = &_filterSeedBatches[i];
+
+                    *batch = new()
                     {
-                        SeedHashCache = (Vector512<double>*)Marshal.AllocHGlobal(sizeof(Vector512<double>) * search._pseudoHashKeyLengthCount)
+                        SeedHashes = (Vector512<double>*)Marshal.AllocHGlobal(sizeof(Vector512<double>) * Motely.MaxCachedPseudoHashKeyLength),
                     };
+
+                    batch->SeedHashCache = new(search, batch->SeedHashes);
                 }
             }
         }
@@ -548,6 +552,8 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
                     BatchSeeds(0, searchResultMask, in searchContextParams);
                 }
             }
+
+            searchContextParams.SeedHashCache->Reset();
         }
 
         // Extracts the actual seed characters from a search context and reports that seed
@@ -624,8 +630,10 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
                     // Store the cached hashes
                     for (int i = 0; i < Search._pseudoHashKeyLengthCount; i++)
                     {
-                        ((double*)filterBatch->SeedHashCache)[i * Vector512<double>.Count + seedBatchIndex] =
-                            ((double*)searchParams.SeedHashCache.SeedHashes)[i * Vector512<double>.Count + lane];
+                        int partialHashLength = Search._pseudoHashKeyLengths[i];
+                        
+                        ((double*)filterBatch->SeedHashes)[i * Vector512<double>.Count + seedBatchIndex] =
+                            ((double*)searchParams.SeedHashCache->Cache[partialHashLength])[i * Vector512<double>.Count + lane];
                     }
 
                     if (seedBatchIndex == Vector512<double>.Count - 1)
@@ -649,7 +657,7 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
             }
 
             MotelySearchContextParams searchParams = new(
-                new(filterBatch->SeedHashCache, Search._pseudoHashReverseMap),
+                &filterBatch->SeedHashCache,
                 filterBatch->SeedLength,
                 0, null,
                 (Vector512<double>*)&filterBatch->SeedCharacters
@@ -677,6 +685,7 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
 
             // Reset the batch
             filterBatch->SeedCount = 0;
+            filterBatch->SeedHashCache.Reset();
         }
 
         public void Dispose()
@@ -685,7 +694,8 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
 
             for (int i = 0; i < Search._additionalFilters.Length; i++)
             {
-                Marshal.FreeHGlobal((nint)_filterSeedBatches[i].SeedHashCache);
+                _filterSeedBatches[i].SeedHashCache.Dispose();
+                Marshal.FreeHGlobal((nint)_filterSeedBatches[i].SeedHashes);
             }
 
             Marshal.FreeHGlobal((nint)_filterSeedBatches);
@@ -696,7 +706,9 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
     {
         public readonly IMotelySeedProvider SeedProvider;
 
-        private readonly Vector512<double>* _hashCache;
+        private readonly Vector512<double>* _hashes;
+        private readonly PartialSeedHashCache* _hashCache;
+
         private readonly Vector512<double>* _seedCharacterMatrix;
 
         public MotelyProviderSearchThread(MotelySearch<TBaseFilter> search, MotelySearchSettings<TBaseFilter> settings, int index) : base(search, index)
@@ -710,7 +722,11 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
             MaxBatch = (SeedProvider.SeedCount + Vector512<double>.Count - 1) / Vector512<double>.Count;
             SeedsPerBatch = Vector512<double>.Count;
 
-            _hashCache = (Vector512<double>*)Marshal.AllocHGlobal(sizeof(Vector512<double>) * Search._pseudoHashKeyLengthCount);
+            _hashes = (Vector512<double>*)Marshal.AllocHGlobal(sizeof(Vector512<double>) * search._pseudoHashKeyLengthCount);
+
+            _hashCache = (PartialSeedHashCache*)Marshal.AllocHGlobal(sizeof(PartialSeedHashCache));
+            *_hashCache = new PartialSeedHashCache(search, _hashes);
+
             _seedCharacterMatrix = (Vector512<double>*)Marshal.AllocHGlobal(sizeof(Vector512<double>) * Motely.MaxSeedLength);
         }
 
@@ -775,11 +791,11 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
                         numVector = Vector512.Subtract(numVector, intPart);
                     }
 
-                    _hashCache[pseudohashKeyIdx] = numVector;
+                    _hashes[pseudohashKeyIdx] = numVector;
                 }
 
                 SearchSeeds(new MotelySearchContextParams(
-                    new(_hashCache, Search._pseudoHashReverseMap),
+                    _hashCache,
                     seedLength,
                     0, null,
                     _seedCharacterMatrix
@@ -821,7 +837,7 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
                     num = (1.1239285023 / num * seed[i] * Math.PI + (i + pseudohashKeyLength + 1) * Math.PI) % 1;
                 }
 
-                _hashCache[pseudohashKeyIdx] = Vector512.Create(num);
+                _hashes[pseudohashKeyIdx] = Vector512.Create(num);
             }
 
             for (int i = 0; i < seed.Length - 1; i++)
@@ -832,7 +848,7 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
             Vector512<double> firstCharacterVector = Vector512.CreateScalar((double)seed[0]);
 
             SearchSeeds(new MotelySearchContextParams(
-                new(_hashCache, Search._pseudoHashReverseMap),
+                _hashCache,
                 seed.Length,
                 seed.Length - 1,
                 seedLastCharacters,
@@ -843,7 +859,11 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
         public new void Dispose()
         {
             base.Dispose();
+
+            _hashCache->Dispose();
             Marshal.FreeHGlobal((nint)_hashCache);
+
+            Marshal.FreeHGlobal((nint)_hashes);
             Marshal.FreeHGlobal((nint)_seedCharacterMatrix);
         }
     }
@@ -882,6 +902,7 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
 
         private readonly char* _digits;
         private readonly Vector512<double>* _hashes;
+        private readonly PartialSeedHashCache* _hashCache;
 
         public int LastCompletedBatch;
 
@@ -896,6 +917,9 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
             MaxBatch = (int)Math.Pow(Motely.SeedDigits.Length, _nonBatchCharCount);
 
             _hashes = (Vector512<double>*)Marshal.AllocHGlobal(sizeof(Vector512<double>) * Search._pseudoHashKeyLengthCount * (_batchCharCount + 1));
+
+            _hashCache = (PartialSeedHashCache*)Marshal.AllocHGlobal(sizeof(PartialSeedHashCache));
+            *_hashCache = new PartialSeedHashCache(search, &_hashes[0]);
         }
 
         protected override void SearchBatch(int batchIdx)
@@ -959,8 +983,7 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
             if (i == 0)
             {
                 SearchSeeds(new MotelySearchContextParams(
-                    new(hashes, Search._pseudoHashReverseMap),
-                    Motely.MaxSeedLength, Motely.MaxSeedLength - 1, &_digits[1], &seedDigitVector
+                    _hashCache, Motely.MaxSeedLength, Motely.MaxSeedLength - 1, &_digits[1], &seedDigitVector
                 ));
             }
             else
@@ -982,6 +1005,10 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IMotelySearch
         public new void Dispose()
         {
             base.Dispose();
+            
+            _hashCache->Dispose();
+            Marshal.FreeHGlobal((nint)_hashCache);
+
             Marshal.FreeHGlobal((nint)_digits);
             Marshal.FreeHGlobal((nint)_hashes);
         }

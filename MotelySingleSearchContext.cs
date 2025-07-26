@@ -36,23 +36,23 @@ public ref struct MotelySingleResampleStream(MotelySinglePrngStream initialPrngS
 }
 
 
-public unsafe ref partial struct MotelySingleSearchContext
+public readonly unsafe ref partial struct MotelySingleSearchContext
 {
     public readonly int VectorLane;
 
     private readonly ref readonly MotelySearchParameters _searchParameters;
     private readonly ref readonly MotelySearchContextParams _contextParams;
 
-    public readonly MotelyStake Stake => _searchParameters.Stake;
-    public readonly MotelyDeck Deck => _searchParameters.Deck;
+    public MotelyStake Stake => _searchParameters.Stake;
+    public MotelyDeck Deck => _searchParameters.Deck;
 
-    private readonly ref readonly SeedHashCache SeedHashCache => ref _contextParams.SeedHashCache;
-    private readonly int SeedLength => _contextParams.SeedLength;
-    private readonly int SeedFirstCharactersLength => _contextParams.SeedFirstCharactersLength;
-    private readonly int SeedLastCharactersLength => _contextParams.SeedLastCharactersLength;
-    private readonly char* SeedFirstCharacters => _contextParams.SeedFirstCharacters;
-    private readonly Vector512<double>* SeedLastCharacters => _contextParams.SeedLastCharacters;
-    private readonly bool IsAdditionalFilter => _contextParams.IsAdditionalFilter;
+    private PartialSeedHashCache* SeedHashCache => _contextParams.SeedHashCache;
+    private int SeedLength => _contextParams.SeedLength;
+    private int SeedFirstCharactersLength => _contextParams.SeedFirstCharactersLength;
+    private int SeedLastCharactersLength => _contextParams.SeedLastCharactersLength;
+    private char* SeedFirstCharacters => _contextParams.SeedFirstCharacters;
+    private Vector512<double>* SeedLastCharacters => _contextParams.SeedLastCharacters;
+    private bool IsAdditionalFilter => _contextParams.IsAdditionalFilter;
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,10 +65,10 @@ public unsafe ref partial struct MotelySingleSearchContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly string GetSeed() => _contextParams.GetSeed(VectorLane);
+    public string GetSeed() => _contextParams.GetSeed(VectorLane);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly int GetSeed(char* output) => _contextParams.GetSeed(VectorLane, output);
+    public int GetSeed(char* output) => _contextParams.GetSeed(VectorLane, output);
 
 #if !DEBUG
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,12 +78,12 @@ public unsafe ref partial struct MotelySingleSearchContext
         if (IsAdditionalFilter)
         {
             // If we are an additional filter, we can't guarantee that our cached pseudo hashes are actually cached
-            if (!SeedHashCache.HasPartialHash(key.Length))
+            if (!SeedHashCache->HasPartialHash(key.Length))
                 return InternalPseudoHash(key);
         }
 
 #if DEBUG
-        if (!SeedHashCache.HasPartialHash(key.Length))
+        if (!SeedHashCache->HasPartialHash(key.Length))
             throw new KeyNotFoundException("Cache does not contain key :c");
 #endif
 
@@ -93,9 +93,9 @@ public unsafe ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private readonly double InternalPseudoHashCached(string key)
+    private double InternalPseudoHashCached(string key)
     {
-        double num = SeedHashCache.GetPartialHash(key.Length, VectorLane);
+        double num = SeedHashCache->GetPartialHash(key.Length, VectorLane);
 
         for (int i = key.Length - 1; i >= 0; i--)
         {
@@ -111,7 +111,7 @@ public unsafe ref partial struct MotelySingleSearchContext
 #endif
     public double PseudoHash(string key)
     {
-        if (SeedHashCache.HasPartialHash(key.Length))
+        if (SeedHashCache->HasPartialHash(key.Length))
         {
             return InternalPseudoHashCached(key);
         }
@@ -187,7 +187,7 @@ public unsafe ref partial struct MotelySingleSearchContext
 #endif
     public double GetNextPseudoSeed(ref MotelySinglePrngStream stream)
     {
-        return (GetNextPrngState(ref stream) + SeedHashCache.GetSeedHash(VectorLane)) / 2d;
+        return (GetNextPrngState(ref stream) + SeedHashCache->GetSeedHash(VectorLane)) / 2d;
     }
 
 #if !DEBUG

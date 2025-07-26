@@ -28,6 +28,7 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
 
         public VectorMask Filter(ref MotelyVectorSearchContext searchContext)
         {
+
             return searchContext.SearchIndividualSeeds((ref MotelySingleSearchContext searchContext) =>
             {
 
