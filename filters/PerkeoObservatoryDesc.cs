@@ -8,8 +8,8 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
     public PerkeoObservatoryFilter CreateFilter(ref MotelyFilterCreationContext ctx)
     {
-        ctx.CacheVoucherStream(1);
-        ctx.CacheVoucherStream(2);
+        ctx.CacheAnteFirstVoucher(1);
+        ctx.CacheAnteFirstVoucher(2);
 
         return new PerkeoObservatoryFilter();
     }

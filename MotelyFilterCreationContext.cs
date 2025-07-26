@@ -52,6 +52,8 @@ public ref struct MotelyFilterCreationContext
 
     public readonly void CacheVoucherStream(int ante, bool force = false) => CacheResampleStream(MotelyPrngKeys.Voucher + ante, force);
 
+    public readonly void CacheAnteFirstVoucher(int ante, bool force = false) => CacheVoucherStream(ante, force);
+
     private readonly void CacheTarotStream(int ante, string source, bool cacheTarot, bool cacheResample, bool cacheSoul, bool force)
     {
         if (cacheTarot)
@@ -109,7 +111,10 @@ public ref struct MotelyFilterCreationContext
         CachePlanetStream(ante, MotelyPrngKeys.ShopItemSource, true, true, force);
     }
 
-    public readonly void CacheStandardPackStream(int ante, MotelyStandardCardStreamFlags flags = 0, bool force = false)
+    public readonly void CacheStandardPackStream(int ante,
+        MotelyStandardCardStreamFlags flags = MotelyStandardCardStreamFlags.Default,
+        bool force = false
+    )
     {
         CachePseudoHash(MotelyPrngKeys.StandardCardBase + MotelyPrngKeys.StandardPackItemSource + ante, force);
 
@@ -131,33 +136,82 @@ public ref struct MotelyFilterCreationContext
         }
     }
 
-    public readonly void CacheShopJokerStream(int ante, MotelyJokerStreamFlags flags = 0, bool force = false)
+    private readonly void CacheJokerStream(int ante,
+        string source, string eternalPerishableSource, string rentalSource,
+        MotelyJokerStreamFlags flags, bool force)
     {
-
         if (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeEdition))
         {
-            CachePseudoHash(MotelyPrngKeys.JokerEdition + MotelyPrngKeys.ShopItemSource + ante, force);
+            CachePseudoHash(MotelyPrngKeys.JokerEdition + source + ante, force);
         }
 
         if (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeStickers))
         {
             if (Stake >= MotelyStake.Black)
             {
-                CachePseudoHash(MotelyPrngKeys.ShopJokerEternalPerishableSource + ante, force);
+                CachePseudoHash(eternalPerishableSource + ante, force);
 
                 if (Stake >= MotelyStake.Gold)
                 {
-                    CachePseudoHash(MotelyPrngKeys.ShopJokerRentalSource + ante, force);
+                    CachePseudoHash(rentalSource + ante, force);
                 }
             }
         }
-
-        // TODO Cache the common joker stream?
-
-        CachePseudoHash(MotelyPrngKeys.JokerRarity + MotelyPrngKeys.ShopItemSource + ante, force);
     }
 
-    public readonly void CacheShopStream(int ante, MotelyShopStreamFlags shopFlags = 0, MotelyJokerStreamFlags jokerFlags = 0, bool force = false)
+    public readonly void CacheShopJokerStream(
+        int ante,
+        MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default,
+        bool force = false
+    )
+    {
+        CachePseudoHash(MotelyPrngKeys.JokerRarity + MotelyPrngKeys.ShopItemSource + ante, force);
+
+        CacheJokerStream(ante,
+            MotelyPrngKeys.ShopItemSource,
+            MotelyPrngKeys.ShopJokerEternalPerishableSource,
+            MotelyPrngKeys.ShopJokerRentalSource,
+            flags, force
+        );
+
+        // TODO Cache the common joker stream?
+    }
+
+    private readonly void CacheFixedRarityJokerStream(int ante,
+        string source, string eternalPerishableSource, string rentalSource,
+        MotelyJokerRarity rarity,
+        MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default,
+        bool force = false
+    )
+    {
+        CachePseudoHash(MotelyPrngKeys.FixedRarityJoker(rarity, source, ante), force);
+
+        CacheJokerStream(ante,
+            source, eternalPerishableSource, rentalSource, flags, force
+        );
+    }
+
+
+    public readonly void CacheSoulJokerStream(
+        int ante,
+        MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default,
+        bool force = false
+    )
+    {
+        CacheFixedRarityJokerStream(ante,
+            MotelyPrngKeys.JokerSoulSource,
+            MotelyPrngKeys.ShopJokerEternalPerishableSource,
+            MotelyPrngKeys.ShopJokerRentalSource,
+            MotelyJokerRarity.Legendary,
+            flags, force
+        );
+    }
+
+    public readonly void CacheShopStream(int ante,
+        MotelyShopStreamFlags shopFlags = MotelyShopStreamFlags.Default,
+        MotelyJokerStreamFlags jokerFlags = MotelyJokerStreamFlags.Default,
+        bool force = false
+    )
     {
         CachePseudoHash(MotelyPrngKeys.ShopItemType + ante);
 

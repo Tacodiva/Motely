@@ -20,13 +20,13 @@ ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private MotelySinglePlanetStream CreatePlanetStream(string source, int ante, bool blackHoleable)
+    private MotelySinglePlanetStream CreatePlanetStream(string source, int ante, bool blackHoleable, bool isCached)
     {
         return new(
             MotelyPrngKeys.Planet + source + ante,
-            CreateResampleStream(MotelyPrngKeys.Planet + source + ante),
+            CreateResampleStream(MotelyPrngKeys.Planet + source + ante, isCached),
             blackHoleable ?
-                CreatePrngStream(MotelyPrngKeys.PlanetBlackHole + MotelyPrngKeys.Planet + ante) :
+                CreatePrngStream(MotelyPrngKeys.PlanetBlackHole + MotelyPrngKeys.Planet + ante, isCached) :
                 MotelySinglePrngStream.Invalid
         );
     }
@@ -34,41 +34,14 @@ ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private MotelySinglePlanetStream CreatePlanetStreamCached(string source, int ante, bool blackHoleable)
-    {
-        return new(
-            MotelyPrngKeys.Planet + source + ante,
-            CreateResampleStreamCached(MotelyPrngKeys.Planet + source + ante),
-            blackHoleable ?
-                CreatePrngStreamCached(MotelyPrngKeys.PlanetBlackHole + MotelyPrngKeys.Planet + ante) :
-                MotelySinglePrngStream.Invalid
-        );
-    }
+    public MotelySinglePlanetStream CreateCelestialPackPlanetStream(int ante, bool isCached = false) =>
+        CreatePlanetStream(MotelyPrngKeys.CelestialPackItemSource, ante, true, isCached);
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public MotelySinglePlanetStream CreateCelestialPackPlanetStreamCached(int ante) =>
-        CreatePlanetStreamCached(MotelyPrngKeys.CelestialPackItemSource, ante, true);
-
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelySinglePlanetStream CreateCelestialPackPlanetStream(int ante) =>
-        CreatePlanetStream(MotelyPrngKeys.CelestialPackItemSource, ante, true);
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelySinglePlanetStream CreateShopPlanetStreamCached(int ante) =>
-        CreatePlanetStreamCached(MotelyPrngKeys.ShopItemSource, ante, false);
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelySinglePlanetStream CreateShopPlanetStream(int ante) =>
-        CreatePlanetStream(MotelyPrngKeys.ShopItemSource, ante, false);
+    public MotelySinglePlanetStream CreateShopPlanetStream(int ante, bool isCached = false) =>
+        CreatePlanetStream(MotelyPrngKeys.ShopItemSource, ante, false, isCached);
 
 
     public MotelySingleItemSet GetNextCelestialPackContents(ref MotelySinglePlanetStream planetStream, MotelyBoosterPackSize size)

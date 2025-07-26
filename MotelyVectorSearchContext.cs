@@ -7,10 +7,16 @@ namespace Motely;
 
 public struct MotelyVectorPrngStream(Vector512<double> state)
 {
+    public static MotelyVectorPrngStream Invalid => new(Vector512.CreateScalar(-1.0));
+
     public Vector512<double> State = state;
+    public readonly bool IsInvalid => State[0] < 0;
 
     public readonly MotelySinglePrngStream GetSingleStream(int lane)
     {
+        if (IsInvalid)
+            return new MotelySinglePrngStream(State[0]);
+
         return new MotelySinglePrngStream(State[lane]);
     }
 }
@@ -152,7 +158,6 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VectorMask SearchIndividualSeeds(VectorMask mask, MotelyIndividualSeedSearcher searcher)
     {
-
         if (mask.IsAllFalse()) return default;
 
         uint results = 0;
@@ -182,50 +187,29 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public Vector512<double> PseudoHashCached(string key)
+    public Vector512<double> PseudoHash(string key, bool isCached = false)
     {
-        if (IsAdditionalFilter)
+        Vector512<double> partialHash;
+
+        if ((isCached && !IsAdditionalFilter) || SeedHashCache->HasPartialHash(key.Length))
         {
-            // If we are an additional filter, we can't guarantee that our cached pseudo hashes are actually cached
-            if (!SeedHashCache->HasPartialHash(key.Length))
-                return InternalPseudoHash(key);
+            partialHash = SeedHashCache->GetPartialHashVector(key.Length);
+        }
+        else
+        {
+            partialHash = InternalPseudoHashSeed(key.Length);
+
+            if (key.Length < Motely.MaxCachedPseudoHashKeyLength)
+                SeedHashCache->CachePartialHash(key.Length, partialHash);
         }
 
-#if DEBUG
-        if (!SeedHashCache->HasPartialHash(key.Length))
-            throw new KeyNotFoundException("Cache does not contain key :c");
-#endif
-
-        return InternalPseudoHashCached(key);
+        return InternalPseudoHash(key, partialHash);
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private Vector512<double> InternalPseudoHashCached(string key)
-    {
-        return InternalPseudoHash(key, SeedHashCache->GetPartialHashVector(key.Length));
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public Vector512<double> PseudoHash(string key)
-    {
-        if (SeedHashCache->HasPartialHash(key.Length))
-        {
-            Console.WriteLine("has partial hash");
-            return InternalPseudoHashCached(key);
-        }
-
-        Console.WriteLine("caching pseudo hash");
-        return InternalPseudoHash(key);
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private Vector512<double> InternalPseudoHash(string key)
+    private Vector512<double> InternalPseudoHashSeed(int keyLength)
     {
         int seedLastCharacterLength = SeedLastCharactersLength;
         double num = 1;
@@ -233,7 +217,7 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
         // First we do the first characters of the seed which are the same between all vector lanes
         for (int i = SeedFirstCharactersLength - 1; i >= 0; i--)
         {
-            num = (1.1239285023 / num * SeedFirstCharacters[i] * Math.PI + Math.PI * (i + key.Length + seedLastCharacterLength + 1)) % 1;
+            num = (1.1239285023 / num * SeedFirstCharacters[i] * Math.PI + Math.PI * (i + keyLength + seedLastCharacterLength + 1)) % 1;
         }
 
         // Then we vectorize and do the last characters of the seed
@@ -246,19 +230,13 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
             numVector = Vector512.Multiply(numVector, SeedLastCharacters[i]);
 
             numVector = Vector512.Multiply(numVector, Math.PI);
-            numVector = Vector512.Add(numVector, Vector512.Create((i + key.Length + 1) * Math.PI));
+            numVector = Vector512.Add(numVector, Vector512.Create((i + keyLength + 1) * Math.PI));
 
             Vector512<double> intPart = Vector512.Floor(numVector);
             numVector = Vector512.Subtract(numVector, intPart);
         }
 
-        // Cache the partial pseudohash we've calculated
-        if (key.Length < Motely.MaxCachedPseudoHashKeyLength)
-        {
-            SeedHashCache->CachePartialHash(key.Length, numVector);
-        }
-
-        return InternalPseudoHash(key, numVector);
+        return numVector;
     }
 
 #if !DEBUG
@@ -285,7 +263,7 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public static Vector512<double> IteratePRNG(Vector512<double> state)
+    private static Vector512<double> IteratePRNG(Vector512<double> state)
     {
         state = Vector512.Multiply(state, 1.72431234);
         state = Vector512.Add(state, Vector512.Create(2.134453429141));
@@ -304,17 +282,9 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public MotelyVectorPrngStream CreatePrngStreamCached(string key)
+    public MotelyVectorPrngStream CreatePrngStream(string key, bool isCached = false)
     {
-        return new(PseudoHashCached(key));
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelyVectorPrngStream CreatePrngStream(string key)
-    {
-        return new(PseudoHash(key));
+        return new(PseudoHash(key, isCached));
     }
 
 #if !DEBUG
@@ -408,35 +378,19 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private MotelyVectorPrngStream CreateResamplePrngStream(string key, int resample)
+    private MotelyVectorResampleStream CreateResampleStream(string key, bool isCached)
     {
-        return CreatePrngStream(key + MotelyPrngKeys.Resample + (resample + 2));
+        return new(CreatePrngStream(key, isCached), isCached);
     }
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private MotelyVectorPrngStream CreateResamplePrngStreamCached(string key, int resample)
+    private MotelyVectorPrngStream CreateResamplePrngStream(string key, int resample, bool isCached)
     {
-        // We don't cache resamples > 8 because they'd use an extra digit
-        if (resample < 8) return CreatePrngStreamCached(key + MotelyPrngKeys.Resample + (resample + 2));
-        return CreateResamplePrngStream(key, resample);
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private MotelyVectorResampleStream CreateResampleStreamCached(string key)
-    {
-        return new(CreatePrngStreamCached(key), true);
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    private MotelyVectorResampleStream CreateResampleStream(string key)
-    {
-        return new(CreatePrngStream(key), false);
+        // We don't cache resamples >= 8 because they'd use an extra digit
+        if (isCached && resample >= 8) isCached = false;
+        return CreatePrngStream(key + MotelyPrngKeys.Resample + (resample + 2), isCached);
     }
 
 #if !DEBUG
@@ -444,7 +398,6 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
 #endif
     private ref MotelyVectorPrngStream GetResamplePrngStream(ref MotelyVectorResampleStream resampleStream, string key, int resample)
     {
-
         if (resample < MotelyVectorResampleStream.StackResampleCount)
         {
             ref MotelyVectorPrngStream prngStream = ref resampleStream.ResamplePrngStreams[resample];
@@ -453,8 +406,7 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
             {
                 ++resampleStream.ResamplePrngStreamInitCount;
 
-                if (resampleStream.IsCached) prngStream = CreateResamplePrngStreamCached(key, resample);
-                else prngStream = CreateResamplePrngStream(key, resample);
+                prngStream = CreateResamplePrngStream(key, resample, resampleStream.IsCached);
             }
 
             return ref prngStream;
@@ -479,8 +431,7 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
 
             ref MotelyVectorPrngStream prngStream = ref Unsafe.Unbox<MotelyVectorPrngStream>(prngStreamObject);
 
-            if (resampleStream.IsCached) prngStream = CreateResamplePrngStreamCached(key, resample);
-            else prngStream = CreateResamplePrngStream(key, resample);
+            prngStream = CreateResamplePrngStream(key, resample, resampleStream.IsCached);
 
             return ref prngStream;
         }

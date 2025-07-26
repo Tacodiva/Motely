@@ -17,12 +17,14 @@ public enum MotelyStandardCardStreamFlags
     ExcludeEnhancement = 1 << 1,
     ExcludeEdition = 1 << 2,
     ExcludeSeal = 1 << 3,
+
+    Default = 0
 }
 
 ref partial struct MotelySingleSearchContext
 {
 
-    public MotelySingleStandardCardStream CreateStandardPackCardStream(int ante, MotelyStandardCardStreamFlags flags = 0)
+    public MotelySingleStandardCardStream CreateStandardPackCardStream(int ante, MotelyStandardCardStreamFlags flags = 0, bool isCached = false)
     {
         return new()
         {

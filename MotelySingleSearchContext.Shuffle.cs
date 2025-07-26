@@ -4,7 +4,7 @@ namespace Motely;
 unsafe ref partial struct MotelySingleSearchContext
 {
 
-    public void Shuffle(string seed, MotelyItem[] deck)
+    public void Shuffle(string seed, Span<MotelyItem> deck)
     {
 
         MotelySinglePrngStream stream = CreatePrngStream(seed);

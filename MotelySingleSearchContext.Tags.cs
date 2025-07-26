@@ -30,17 +30,9 @@ ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public MotelySingleTagStream CreateTagStreamCached(int ante)
+    public MotelySingleTagStream CreateTagStream(int ante, bool isCached = false)
     {
-        return new(CreateResampleStreamCached(MotelyPrngKeys.Tags + ante), ante);
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelySingleTagStream CreateTagStream(int ante)
-    {
-        return new(CreateResampleStream(MotelyPrngKeys.Tags + ante), ante);
+        return new(CreateResampleStream(MotelyPrngKeys.Tags + ante, isCached), ante);
     }
 
 #if !DEBUG

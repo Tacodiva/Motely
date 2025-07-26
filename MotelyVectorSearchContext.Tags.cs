@@ -17,17 +17,9 @@ ref partial struct MotelyVectorSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public MotelyVectorTagStream CreateTagStreamCached(int ante)
+    public MotelyVectorTagStream CreateTagStream(int ante, bool isCached = false)
     {
-        return new(CreateResampleStreamCached(MotelyPrngKeys.Tags + ante), ante);
-    }
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelyVectorTagStream CreateTagStream(int ante)
-    {
-        return new(CreateResampleStream(MotelyPrngKeys.Tags + ante), ante);
+        return new(CreateResampleStream(MotelyPrngKeys.Tags + ante, isCached), ante);
     }
 
 #if !DEBUG

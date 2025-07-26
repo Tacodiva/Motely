@@ -24,7 +24,7 @@ public struct NegativeTagFilterDesc() : IMotelySeedFilterDesc<NegativeTagFilterD
 
             for (int ante = 2; ante <= 4; ante++)
             {
-                tagStream = searchContext.CreateTagStreamCached(ante);
+                tagStream = searchContext.CreateTagStream(ante, true);
 
                 // Small blind
                 mask &= VectorEnum256.Equals(searchContext.GetNextTag(ref tagStream), MotelyTag.NegativeTag);

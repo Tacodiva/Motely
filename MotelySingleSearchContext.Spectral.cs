@@ -18,15 +18,15 @@ ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private MotelySingleSpectralStream CreateSpectralStream(string source, int ante, bool searchSpectral, bool soulBlackHoleable)
+    private MotelySingleSpectralStream CreateSpectralStream(string source, int ante, bool searchSpectral, bool soulBlackHoleable, bool isCached)
     {
         return new(
             MotelyPrngKeys.Spectral + source + ante,
             searchSpectral ?
-                CreateResampleStream(MotelyPrngKeys.Spectral + source + ante) :
+                CreateResampleStream(MotelyPrngKeys.Spectral + source + ante, isCached) :
                 MotelySingleResampleStream.Invalid,
             soulBlackHoleable ?
-                CreatePrngStream(MotelyPrngKeys.SpectralSoulBlackHole + MotelyPrngKeys.Spectral + ante) :
+                CreatePrngStream(MotelyPrngKeys.SpectralSoulBlackHole + MotelyPrngKeys.Spectral + ante, isCached) :
                 MotelySinglePrngStream.Invalid
         );
     }
@@ -34,43 +34,14 @@ ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private MotelySingleSpectralStream CreateSpectralStreamCached(string source, int ante, bool searchSpectral, bool soulBlackHoleable)
-    {
-        return new(
-            MotelyPrngKeys.Spectral + source + ante,
-            searchSpectral ?
-                CreateResampleStreamCached(MotelyPrngKeys.Spectral + source + ante) :
-                MotelySingleResampleStream.Invalid,
-            soulBlackHoleable ?
-                CreatePrngStreamCached(MotelyPrngKeys.SpectralSoulBlackHole + MotelyPrngKeys.Spectral + ante) :
-                MotelySinglePrngStream.Invalid
-        );
-    }
+    public MotelySingleSpectralStream CreateSpectralPackSpectralStream(int ante, bool soulOnly = false, bool isCached = false) =>
+        CreateSpectralStream(MotelyPrngKeys.SpectralPackItemSource, ante, !soulOnly, true, isCached);
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public MotelySingleSpectralStream CreateSpectralPackSpectralStreamCached(int ante, bool soulOnly = false) =>
-        CreateSpectralStreamCached(MotelyPrngKeys.SpectralPackItemSource, ante, !soulOnly, true);
-
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelySingleSpectralStream CreateSpectralPackSpectralStream(int ante, bool soulOnly = false) =>
-        CreateSpectralStream(MotelyPrngKeys.SpectralPackItemSource, ante, !soulOnly, true);
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelySingleSpectralStream CreateShopSpectralStreamCached(int ante) =>
-        CreateSpectralStreamCached(MotelyPrngKeys.ShopItemSource, ante, true, false);
-
-#if !DEBUG
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public MotelySingleSpectralStream CreateShopSpectralStream(int ante) =>
-        CreateSpectralStream(MotelyPrngKeys.ShopItemSource, ante, true, false);
+    public MotelySingleSpectralStream CreateShopSpectralStream(int ante, bool isCached = false) =>
+        CreateSpectralStream(MotelyPrngKeys.ShopItemSource, ante, true, false, isCached);
 
 
 #if !DEBUG

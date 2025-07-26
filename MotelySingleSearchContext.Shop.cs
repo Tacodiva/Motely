@@ -28,7 +28,9 @@ public enum MotelyShopStreamFlags
     ExcludeJokers = 1 << 1,
     ExcludeTarots = 1 << 2,
     ExcludePlanets = 1 << 3,
-    ExcludeSpectrals = 1 << 4
+    ExcludeSpectrals = 1 << 4,
+
+    Default = 0
 }
 
 unsafe ref partial struct MotelySingleSearchContext
@@ -39,20 +41,35 @@ unsafe ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public MotelySingleShopItemStream CreateShopItemStream(int ante, MotelyShopStreamFlags flags = 0, MotelyJokerStreamFlags jokerFlags = 0)
+    public MotelySingleShopItemStream CreateShopItemStream(int ante,
+        MotelyShopStreamFlags flags = MotelyShopStreamFlags.Default,
+        MotelyJokerStreamFlags jokerFlags = MotelyJokerStreamFlags.Default,
+        bool isCached = false)
+    {
+        return CreateShopItemStream(ante, Deck.GetDefaultRunState(), flags, jokerFlags);
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public MotelySingleShopItemStream CreateShopItemStream(int ante,
+        MotelyRunState runState,
+        MotelyShopStreamFlags flags = MotelyShopStreamFlags.Default,
+        MotelyJokerStreamFlags jokerFlags = MotelyJokerStreamFlags.Default,
+        bool isCached = false)
     {
 
         MotelySingleShopItemStream stream = new()
         {
-            ItemTypeStream = CreatePrngStream(MotelyPrngKeys.ShopItemType + ante),
+            ItemTypeStream = CreatePrngStream(MotelyPrngKeys.ShopItemType + ante, isCached),
             JokerStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeJokers) ?
-                default : CreateShopJokerStream(ante, jokerFlags),
+                default : CreateShopJokerStream(ante, jokerFlags, isCached),
             TarotStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeTarots) ?
-                default : CreateShopTarotStream(ante),
+                default : CreateShopTarotStream(ante, isCached),
             PlanetStream = flags.HasFlag(MotelyShopStreamFlags.ExcludePlanets) ?
-                default : CreateShopPlanetStream(ante),
+                default : CreateShopPlanetStream(ante, isCached),
             SpectralStream = flags.HasFlag(MotelyShopStreamFlags.ExcludeSpectrals) || Deck != MotelyDeck.Ghost ?
-                default : CreateShopSpectralStream(ante),
+                default : CreateShopSpectralStream(ante, isCached),
 
             TarotRate = 4,
             PlanetRate = 4,
@@ -65,13 +82,27 @@ unsafe ref partial struct MotelySingleSearchContext
             stream.SpectralRate = 2;
         }
 
-        if (Deck == MotelyDeck.Zodiac)
+        if (runState.IsVoucherActive(MotelyVoucher.TarotTycoon))
         {
-            // Tarot merchent
+            stream.TarotRate = 32;
+        }
+        else if (runState.IsVoucherActive(MotelyVoucher.TarotMerchant))
+        {
             stream.TarotRate = 9.6;
-            
-            // Planet merchent
+        }
+
+        if (runState.IsVoucherActive(MotelyVoucher.PlanetTycoon))
+        {
+            stream.PlanetRate = 32;
+        }
+        else if (runState.IsVoucherActive(MotelyVoucher.PlanetMerchant))
+        {
             stream.PlanetRate = 9.6;
+        }
+
+        if (runState.IsVoucherActive(MotelyVoucher.MagicTrick))
+        {
+            stream.PlayingCardRate = 4;
         }
 
         stream.TotalRate = ShopJokerRate + stream.TarotRate + stream.PlanetRate + stream.PlayingCardRate + stream.SpectralRate;
