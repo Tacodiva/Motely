@@ -16,7 +16,7 @@ IMotelySearch search = new MotelySearchSettings<TestFilterDesc.TestFilter>(new T
     // .WithProviderSearch(new MotelyRandomSeedProvider(2000000000))
     // .WithAdditionalFilter(new LuckyCardFilterDesc())
     // .WithAdditionalFilter(new PerkeoObservatoryFilterDesc())
-    .WithListSearch(["TACO"])
+    // .WithListSearch(["TACO", "DIVA", "7729", "AAAA", "BBBB", "CCCC", "DDDD", "EEEE"])
     // .WithListSearch(["TIQR1111"])
     // .WithStake(MotelyStake.Black)
     .Start();

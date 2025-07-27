@@ -8,12 +8,14 @@ namespace Motely;
 public readonly struct MotelyItemVector(Vector256<int> value)
 {
 
+    public static int Count => Vector256<int>.Count;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VectorMask Equals(MotelyItemVector a, MotelyItemVector b) =>
+    public static Vector256<int> Equals(MotelyItemVector a, MotelyItemVector b) =>
         Vector256.Equals(a.Value, b.Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VectorMask Equals(MotelyItemVector vector, MotelyItem item) =>
+    public static Vector256<int> Equals(MotelyItemVector vector, MotelyItem item) =>
         Equals(vector, new MotelyItemVector(Vector256.Create(item.Value)));
 
     public readonly Vector256<int> Value = value;
@@ -78,4 +80,20 @@ public readonly struct MotelyItemVector(Vector256<int> value)
         int mask = 1 << Motely.RentalStickerOffset;
         return new(isRental ? Vector256.BitwiseOr(Value, Vector256.Create(mask)) : Vector256.BitwiseAnd(Value, Vector256.Create(~mask)));
     }
+
+    public MotelyItem this[int i]
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            return new(Value[i]);
+        }
+    }
+
+
+    public override string ToString()
+    {
+        return $"<{this[0]}, {this[1]}, {this[2]}, {this[3]}, {this[4]}, {this[5]}, {this[6]}, {this[7]}>";
+    }
+
 }

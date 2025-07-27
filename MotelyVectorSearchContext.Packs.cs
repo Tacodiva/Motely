@@ -5,6 +5,11 @@ public struct MotelyVectorBoosterPackStream(MotelyVectorPrngStream prngStream, b
 {
     public MotelyVectorPrngStream PrngStream = prngStream;
     public bool GeneratedFirstPack = generatedFirstPack;
+
+    public readonly MotelySingleBoosterPackStream CreateSingleStream(int lane)
+    {
+        return new(PrngStream.CreateSingleStream(lane), GeneratedFirstPack);
+    }
 }
 
 ref partial struct MotelyVectorSearchContext

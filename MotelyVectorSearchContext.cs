@@ -12,7 +12,7 @@ public struct MotelyVectorPrngStream(Vector512<double> state)
     public Vector512<double> State = state;
     public readonly bool IsInvalid => State[0] < 0;
 
-    public readonly MotelySinglePrngStream GetSingleStream(int lane)
+    public readonly MotelySinglePrngStream CreateSingleStream(int lane)
     {
         if (IsInvalid)
             return new MotelySinglePrngStream(State[0]);
@@ -21,8 +21,10 @@ public struct MotelyVectorPrngStream(Vector512<double> state)
     }
 }
 
-public ref struct MotelyVectorResampleStream(MotelyVectorPrngStream initialPrngStream, bool isCached)
+public struct MotelyVectorResampleStream(MotelyVectorPrngStream initialPrngStream, bool isCached)
 {
+    public static MotelyVectorResampleStream Invalid => new(MotelyVectorPrngStream.Invalid, false);
+
     public const int StackResampleCount = 8;
 
     [InlineArray(StackResampleCount)]
@@ -36,6 +38,39 @@ public ref struct MotelyVectorResampleStream(MotelyVectorPrngStream initialPrngS
     public int ResamplePrngStreamInitCount;
     public List<object>? HighResamplePrngStreams;
     public bool IsCached = isCached;
+    public readonly bool IsInvalid => InitialPrngStream.IsInvalid;
+
+    public readonly MotelySingleResampleStream CreateSingleStream(int lane)
+    {
+        if (IsInvalid)
+            return MotelySingleResampleStream.Invalid;
+
+        MotelySingleResampleStream stream = new()
+        {
+            InitialPrngStream = InitialPrngStream.CreateSingleStream(lane),
+            ResamplePrngStreamInitCount = ResamplePrngStreamInitCount,
+            IsCached = IsCached
+        };
+
+        for (int i = 0; i < ResamplePrngStreamInitCount; i++)
+        {
+            stream.ResamplePrngStreams[i] = ResamplePrngStreams[i].CreateSingleStream(lane);
+        }
+
+        if (HighResamplePrngStreams != null)
+        {
+            stream.HighResamplePrngStreams = new List<object>(HighResamplePrngStreams.Count);
+
+            for (int i = 0; i < HighResamplePrngStreams.Count; i++)
+            {
+                stream.HighResamplePrngStreams.Add(
+                    Unsafe.Unbox<MotelyVectorPrngStream>(HighResamplePrngStreams[i]).CreateSingleStream(lane)
+                );
+            }
+        }
+
+        return stream;
+    }
 }
 
 public delegate bool MotelyIndividualSeedSearcher(ref MotelySingleSearchContext searchContext);

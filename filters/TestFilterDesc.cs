@@ -29,54 +29,69 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
         public VectorMask Filter(ref MotelyVectorSearchContext searchContext)
         {
 
-            return searchContext.SearchIndividualSeeds((ref MotelySingleSearchContext searchContext) =>
-            {
+            
 
-                int ante = 2;
+            MotelyVectorTarotStream tarotStream = searchContext.CreateArcanaPackTarotStream(2, true);
 
-                MotelySingleBoosterPackStream packStream = searchContext.CreateBoosterPackStream(ante);
-
-                MotelySingleTarotStream tarotStream = searchContext.CreateArcanaPackTarotStream(ante);
-                MotelySinglePlanetStream planetStream = searchContext.CreateCelestialPackPlanetStream(ante);
-                MotelySingleSpectralStream spectralStream = searchContext.CreateSpectralPackSpectralStream(ante);
-                MotelySingleStandardCardStream standardCardStream = searchContext.CreateStandardPackCardStream(ante);
-
-                for (int i = 0; i < 6; i++)
-                {
-                    MotelyBoosterPack pack = searchContext.GetNextBoosterPack(ref packStream);
-
-                    Console.WriteLine(pack);
-
-                    switch (pack.GetPackType())
-                    {
-                        case MotelyBoosterPackType.Arcana:
-                            Console.WriteLine(searchContext.GetNextArcanaPackContents(ref tarotStream, pack.GetPackSize()).ToString());
-                            break;
-                        case MotelyBoosterPackType.Celestial:
-                            Console.WriteLine(searchContext.GetNextCelestialPackContents(ref planetStream, pack.GetPackSize()).ToString());
-                            break;
-                        case MotelyBoosterPackType.Spectral:
-                            Console.WriteLine(searchContext.GetNextSpectralPackContents(ref spectralStream, pack.GetPackSize()).ToString());
-                            break;
-                        case MotelyBoosterPackType.Standard:
-                            Console.WriteLine(searchContext.GetNextStandardPackContents(ref standardCardStream, pack.GetPackSize()).ToString());
-                            break;
-                    }
-                }
+            return searchContext.GetNextArcanaPackHasTheSoul(ref tarotStream, MotelyBoosterPackSize.Mega);
 
 
-                // var stream = searchContext.CreateShopItemStream(1, ShopFlags, JokerFlags);
 
-                // for (int i = 0; i < 2; i++)
-                // {
-                //     MotelyItem item = searchContext.GetNextShopItem(ref stream);
+            // Console.WriteLine(searchContext.GetNextArcanaPackContents(ref tarotStream, MotelyBoosterPackSize.Mega).ToString());
+            // Console.WriteLine(searchContext.GetNextArcanaPackContents(ref tarotStream, MotelyBoosterPackSize.Mega).ToString());
+            // Console.WriteLine(searchContext.GetNextArcanaPackContents(ref tarotStream, MotelyBoosterPackSize.Mega).ToString());
 
-                //     if (item.Type != MotelyItemType.Blueprint)
-                //         return false;
-                // }
+            // return VectorMask.AllBitsSet;
 
-                return true;
-            });
+
+            // return searchContext.SearchIndividualSeeds((ref MotelySingleSearchContext searchContext) =>
+            // {
+
+            //     int ante = 2;
+
+            //     MotelySingleBoosterPackStream packStream = searchContext.CreateBoosterPackStream(ante);
+
+            //     MotelySingleTarotStream tarotStream = searchContext.CreateArcanaPackTarotStream(ante);
+            //     MotelySinglePlanetStream planetStream = searchContext.CreateCelestialPackPlanetStream(ante);
+            //     MotelySingleSpectralStream spectralStream = searchContext.CreateSpectralPackSpectralStream(ante);
+            //     MotelySingleStandardCardStream standardCardStream = searchContext.CreateStandardPackCardStream(ante);
+
+            //     for (int i = 0; i < 6; i++)
+            //     {
+            //         MotelyBoosterPack pack = searchContext.GetNextBoosterPack(ref packStream);
+
+            //         Console.WriteLine(pack);
+
+            //         switch (pack.GetPackType())
+            //         {
+            //             case MotelyBoosterPackType.Arcana:
+            //                 Console.WriteLine(searchContext.GetNextArcanaPackContents(ref tarotStream, pack.GetPackSize()).ToString());
+            //                 break;
+            //             case MotelyBoosterPackType.Celestial:
+            //                 Console.WriteLine(searchContext.GetNextCelestialPackContents(ref planetStream, pack.GetPackSize()).ToString());
+            //                 break;
+            //             case MotelyBoosterPackType.Spectral:
+            //                 Console.WriteLine(searchContext.GetNextSpectralPackContents(ref spectralStream, pack.GetPackSize()).ToString());
+            //                 break;
+            //             case MotelyBoosterPackType.Standard:
+            //                 Console.WriteLine(searchContext.GetNextStandardPackContents(ref standardCardStream, pack.GetPackSize()).ToString());
+            //                 break;
+            //         }
+            //     }
+
+
+            // var stream = searchContext.CreateShopItemStream(1, ShopFlags, JokerFlags);
+
+            // for (int i = 0; i < 2; i++)
+            // {
+            //     MotelyItem item = searchContext.GetNextShopItem(ref stream);
+
+            //     if (item.Type != MotelyItemType.Blueprint)
+            //         return false;
+            // }
+
+            // return true;
+            // });
         }
     }
 }

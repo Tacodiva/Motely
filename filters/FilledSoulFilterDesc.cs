@@ -37,7 +37,7 @@ public struct FilledSoulFilterDesc() : IMotelySeedFilterDesc<FilledSoulFilterDes
                 mask |= searchContext.SearchIndividualSeeds(soulCards, (ref MotelySingleSearchContext searchContext) =>
                 {
 
-                    MotelySinglePrngStream singleSoulStream = vectorSoulStream.GetSingleStream(searchContext.VectorLane);
+                    MotelySinglePrngStream singleSoulStream = vectorSoulStream.CreateSingleStream(searchContext.VectorLane);
 
                     for (int i = 0; i < SoulsInARow - 1; i++)
                     {

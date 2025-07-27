@@ -1,6 +1,8 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Text;
 
 namespace Motely;
 
@@ -48,13 +50,13 @@ public ref struct MotelyVectorItemSet
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public VectorMask Contains(MotelyItemType item)
+    public Vector256<int> Contains(MotelyItemType item)
     {
-        VectorMask mask = VectorMask.NoBitsSet;
+        Vector256<int> mask = Vector256<int>.Zero;
 
         for (int i = 0; i < Length; i++)
         {
-            mask |= VectorEnum256.Equals(GetItemRef(ref this, i).Type, item);
+            mask |= VectorEnum256.Equals<MotelyItemType>(GetItemRef(ref this, i).Type, item);
         }
 
         return mask;
@@ -63,9 +65,9 @@ public ref struct MotelyVectorItemSet
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    public VectorMask Contains(MotelyItem item)
+    public Vector256<int> Contains(MotelyItemVector item)
     {
-        VectorMask mask = VectorMask.NoBitsSet;
+        Vector256<int> mask = Vector256<int>.Zero;
 
         for (int i = 0; i < Length; i++)
         {
@@ -73,5 +75,40 @@ public ref struct MotelyVectorItemSet
         }
 
         return mask;
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    public Vector256<int> Contains(MotelyItem item)
+    {
+        Vector256<int> mask = Vector256<int>.Zero;
+
+        for (int i = 0; i < Length; i++)
+        {
+            mask |= MotelyItemVector.Equals(GetItemRef(ref this, i), item);
+        }
+
+        return mask;
+    }
+
+    public override string ToString()
+    {
+        StringBuilder sb = new("[");
+
+        for (int lane = 0; lane < MotelyItemVector.Count; lane++)
+        {
+            if (lane != 0) sb.Append(", ");
+            sb.Append('[');
+            for (int i = 0; i < Length; i++)
+            {
+                if (i != 0) sb.Append(", ");
+                sb.Append(GetItemRef(ref this, i)[lane]);
+            }
+            sb.Append(']');
+        }
+        sb.Append(']');
+        
+        return sb.ToString();
     }
 }

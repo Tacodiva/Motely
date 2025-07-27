@@ -5,10 +5,15 @@ using System.Runtime.Intrinsics;
 
 namespace Motely;
 
-public ref struct MotelyVectorVoucherStream(int ante, MotelyVectorResampleStream resampleStream)
+public struct MotelyVectorVoucherStream(int ante, MotelyVectorResampleStream resampleStream)
 {
     public readonly int Ante = ante;
     public MotelyVectorResampleStream ResampleStream = resampleStream;
+
+    public readonly MotelySingleVoucherStream CreateSingleStream(int lane)
+    {
+        return new(Ante, ResampleStream.CreateSingleStream(lane));
+    }
 }
 
 
