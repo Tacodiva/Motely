@@ -1,6 +1,8 @@
 
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace Motely;
 
@@ -43,21 +45,46 @@ public readonly struct MotelyItemVector(Vector256<int> value)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MotelyItemVector WithSeal(in VectorEnum256<MotelyItemSeal> edition)
+    {
+        return new(Vector256.BitwiseOr(Vector256.BitwiseAnd(Value, Vector256.Create(~Motely.ItemSealMask)), edition.HardwareVector));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MotelyItemVector WithSeal(MotelyItemSeal seal)
     {
-        return new(Vector256.BitwiseOr(Vector256.BitwiseAnd(Value, Vector256.Create(~Motely.ItemSealMask)), Vector256.Create((int)seal)));
+        return WithSeal(VectorEnum256.Create(seal));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MotelyItemVector WithEnhancement(in VectorEnum256<MotelyItemEnhancement> edition)
+    {
+        return new(Vector256.BitwiseOr(Vector256.BitwiseAnd(Value, Vector256.Create(~Motely.ItemEnhancementMask)), edition.HardwareVector));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MotelyItemVector WithEnhancement(MotelyItemEnhancement enhancement)
     {
-        return new(Vector256.BitwiseOr(Vector256.BitwiseAnd(Value, Vector256.Create(~Motely.ItemEnhancementMask)), Vector256.Create((int)enhancement)));
+        return WithEnhancement(VectorEnum256.Create(enhancement));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MotelyItemVector WithEdition(in VectorEnum256<MotelyItemEdition> edition)
+    {
+        return new(Vector256.BitwiseOr(Vector256.BitwiseAnd(Value, Vector256.Create(~Motely.ItemEditionMask)), edition.HardwareVector));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MotelyItemVector WithEdition(MotelyItemEdition edition)
     {
-        return new(Vector256.BitwiseOr(Vector256.BitwiseAnd(Value, Vector256.Create(~Motely.ItemEditionMask)), Vector256.Create((int)edition)));
+        return WithEdition(VectorEnum256.Create(edition));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MotelyItemVector WithPerishable(in Vector256<int> isPerishable)
+    {
+        Vector256<int> mask = Vector256.Create(1 << Motely.PerishableStickerOffset);
+        return new(Vector256.BitwiseOr(Vector256.BitwiseAnd(Value, ~mask), Vector256.BitwiseAnd(mask, isPerishable)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -68,10 +95,24 @@ public readonly struct MotelyItemVector(Vector256<int> value)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MotelyItemVector WithEternal(in Vector256<int> isEternal)
+    {
+        Vector256<int> mask = Vector256.Create(1 << Motely.EternalStickerOffset);
+        return new(Vector256.BitwiseOr(Vector256.BitwiseAnd(Value, ~mask), Vector256.BitwiseAnd(mask, isEternal)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MotelyItemVector WithEternal(bool isEternal)
     {
         int mask = 1 << Motely.EternalStickerOffset;
         return new(isEternal ? Vector256.BitwiseOr(Value, Vector256.Create(mask)) : Vector256.BitwiseAnd(Value, Vector256.Create(~mask)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MotelyItemVector WithRental(in Vector256<int> isRental)
+    {
+        Vector256<int> mask = Vector256.Create(1 << Motely.RentalStickerOffset);
+        return new(Vector256.BitwiseOr(Vector256.BitwiseAnd(Value, ~mask), Vector256.BitwiseAnd(mask, isRental)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
