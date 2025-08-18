@@ -110,39 +110,56 @@ ref partial struct MotelySingleSearchContext
             }
         }
 
-        return (MotelyItemType)MotelyItemTypeCategory.SpectralCard |
+        MotelyItemType spectral = (MotelyItemType)MotelyItemTypeCategory.SpectralCard |
             (MotelyItemType)GetNextRandomInt(ref spectralStream.ResampleStream.InitialPrngStream, 0, MotelyEnum<MotelySpectralCard>.ValueCount);
-    }
-
-    public MotelyItem GetNextSpectral(ref MotelySingleSpectralStream SpectralStream, in MotelySingleItemSet itemSet)
-    {
-        if (SpectralStream.IsSoulBlackHoleable)
-        {
-            if (!itemSet.Contains(MotelyItemType.Soul) && GetNextRandom(ref SpectralStream.SoulBlackHolePrngStream) > 0.997)
-            {
-                return MotelyItemType.Soul;
-            }
-
-            if (!itemSet.Contains(MotelyItemType.BlackHole) && GetNextRandom(ref SpectralStream.SoulBlackHolePrngStream) > 0.997)
-            {
-                return MotelyItemType.BlackHole;
-            }
-        }
-
-        MotelyItemType Spectral = (MotelyItemType)MotelyItemTypeCategory.SpectralCard |
-            (MotelyItemType)GetNextRandomInt(ref SpectralStream.ResampleStream.InitialPrngStream, 0, MotelyEnum<MotelySpectralCard>.ValueCount);
 
         int resampleCount = 0;
 
         while (true)
         {
-            if (!itemSet.Contains(Spectral))
+            if (spectral != MotelyItemType.Soul && spectral != MotelyItemType.BlackHole)
             {
-                return Spectral;
+                return spectral;
             }
 
-            Spectral = (MotelyItemType)MotelyItemTypeCategory.SpectralCard | (MotelyItemType)GetNextRandomInt(
-                ref GetResamplePrngStream(ref SpectralStream.ResampleStream, SpectralStream.ResampleKey, resampleCount),
+            spectral = (MotelyItemType)MotelyItemTypeCategory.SpectralCard | (MotelyItemType)GetNextRandomInt(
+                ref GetResamplePrngStream(ref spectralStream.ResampleStream, spectralStream.ResampleKey, resampleCount),
+                0, MotelyEnum<MotelySpectralCard>.ValueCount
+            );
+
+            ++resampleCount;
+        }
+    }
+
+    public MotelyItem GetNextSpectral(ref MotelySingleSpectralStream spectralStream, in MotelySingleItemSet itemSet)
+    {
+        if (spectralStream.IsSoulBlackHoleable)
+        {
+            if (!itemSet.Contains(MotelyItemType.Soul) && GetNextRandom(ref spectralStream.SoulBlackHolePrngStream) > 0.997)
+            {
+                return MotelyItemType.Soul;
+            }
+
+            if (!itemSet.Contains(MotelyItemType.BlackHole) && GetNextRandom(ref spectralStream.SoulBlackHolePrngStream) > 0.997)
+            {
+                return MotelyItemType.BlackHole;
+            }
+        }
+
+        MotelyItemType spectral = (MotelyItemType)MotelyItemTypeCategory.SpectralCard |
+            (MotelyItemType)GetNextRandomInt(ref spectralStream.ResampleStream.InitialPrngStream, 0, MotelyEnum<MotelySpectralCard>.ValueCount);
+
+        int resampleCount = 0;
+
+        while (true)
+        {
+            if (!itemSet.Contains(spectral) && spectral != MotelyItemType.Soul && spectral != MotelyItemType.BlackHole)
+            {
+                return spectral;
+            }
+
+            spectral = (MotelyItemType)MotelyItemTypeCategory.SpectralCard | (MotelyItemType)GetNextRandomInt(
+                ref GetResamplePrngStream(ref spectralStream.ResampleStream, spectralStream.ResampleKey, resampleCount),
                 0, MotelyEnum<MotelySpectralCard>.ValueCount
             );
 

@@ -29,25 +29,33 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
         public VectorMask Filter(ref MotelyVectorSearchContext searchContext)
         {
 
-            MotelyVectorJokerStream jokerStream = searchContext.CreateShopJokerStream(1);
+            // MotelyVectorJokerStream jokerStream = searchContext.CreateShopJokerStream(1);
 
-            for (int i = 0; i < 10; i++)
-                Console.WriteLine(searchContext.GetNextJoker(ref jokerStream));
+            // for (int i = 0; i < 10; i++)
+            //     Console.WriteLine(searchContext.GetNextJoker(ref jokerStream));
 
-            return VectorMask.NoBitsSet;
+            // return VectorMask.NoBitsSet;
 
 
-            // return searchContext.SearchIndividualSeeds((ref MotelySingleSearchContext searchContext) =>
-            // {
-            //     Console.WriteLine($"\n{searchContext.GetSeed()}\n");
+            return searchContext.SearchIndividualSeeds((ref MotelySingleSearchContext searchContext) =>
+            {
+                Console.WriteLine($"\n{searchContext.GetSeed()}\n");
 
-            //     MotelySingleJokerStream jokerStream = searchContext.CreateShopJokerStream(1);
+                MotelySingleSpectralStream stream = searchContext.CreateSpectralPackSpectralStream(6);
+                Console.WriteLine(searchContext.GetNextSpectral(ref stream));
 
-            //     for (int i = 0; i < 10; i++)
-            //         Console.WriteLine(searchContext.GetNextJoker(ref jokerStream));
+                // MotelySinglePrngStream blackHoleStream = searchContext.CreatePrngStream(MotelyPrngKeys.SpectralSoulBlackHole + MotelyPrngKeys.Spectral + 6);
 
-            //     return false;
-            // });
+                // Console.WriteLine(searchContext.GetNextRandom(ref blackHoleStream));
+                // Console.WriteLine(searchContext.GetNextRandom(ref blackHoleStream));
+
+                // MotelySingleJokerStream jokerStream = searchContext.CreateShopJokerStream(1);
+
+                // for (int i = 0; i < 10; i++)
+                //     Console.WriteLine(searchContext.GetNextJoker(ref jokerStream));
+
+                return false;
+            });
         }
     }
 }
