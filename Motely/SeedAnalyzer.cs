@@ -1,5 +1,5 @@
-using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Text;
 
 namespace Motely
@@ -12,198 +12,111 @@ namespace Motely
         /// <summary>
         /// Analyzes a seed and returns structured data
         /// </summary>
-        public static SeedAnalysisData Analyze(string seed, MotelyDeck deck, MotelyStake stake)
+        public static MotelySeedAnalysis Analyze(MotelySeedAnalysisConfig cfg)
         {
-            var data = new SeedAnalysisData
-            {
-                Seed = seed,
-                Deck = deck,
-                Stake = stake
-            };
-
             try
             {
-                var filterDesc = new AnalyzerFilterDesc(data);
+                AnalyzerFilterDesc filterDesc = new();
+
                 var searchSettings = new MotelySearchSettings<AnalyzerFilterDesc.AnalyzerFilter>(filterDesc)
-                    .WithDeck(deck)
-                    .WithStake(stake)
-                    .WithListSearch(new[] { seed })
+                    .WithDeck(cfg.Deck)
+                    .WithStake(cfg.Stake)
+                    .WithListSearch([cfg.Seed])
                     .WithThreadCount(1);
 
-                var search = searchSettings.Start();
+                using var search = searchSettings.Start();
 
-                // Wait for completion
-                while (search.Status == MotelySearchStatus.Running)
-                {
-                    System.Threading.Thread.Sleep(10);
-                }
+                search.AwaitCompletion();
 
-                search.Dispose();
+                Debug.Assert(filterDesc.LastAnalysis != null);
+
+                return filterDesc.LastAnalysis;
             }
             catch (Exception ex)
             {
-                data.Error = ex.Message;
+                return new MotelySeedAnalysis(ex.ToString(), []);
             }
-
-            return data;
-        }
-
-        /// <summary>
-        /// Analyzes a seed and prints to console
-        /// </summary>
-        public static void AnalyzeToConsole(string seed, MotelyDeck deck, MotelyStake stake)
-        {
-            var data = Analyze(seed, deck, stake);
-            ConsoleFormatter.Print(data);
-        }
-
-        /// <summary>
-        /// Alias for UI compatibility - captures analysis data for a seed
-        /// </summary>
-        public static List<SeedAnalysisData.AnteData> CaptureAnalysis(string seed, MotelyDeck deck, MotelyStake stake)
-        {
-            var data = Analyze(seed, deck, stake);
-            return data.Antes;
         }
     }
 
-    /// <summary>
-    /// Alias for UI compatibility
-    /// </summary>
-    public static class SeedAnalyzerCapture
-    {
-        /// <summary>
-        /// Captures analysis data for a seed
-        /// </summary>
-        public static List<AnteData> CaptureAnalysis(string seed, MotelyDeck deck, MotelyStake stake)
-        {
-            var data = SeedAnalyzer.Analyze(seed, deck, stake);
-            return data.Antes.Select(a => new AnteData(a)).ToList();
-        }
-
-        // Wrapper classes for UI compatibility that delegate to the actual data classes
-        public class AnteData(SeedAnalysisData.AnteData data)
-        {
-            private readonly SeedAnalysisData.AnteData _data = data;
-
-            public int Ante => _data.Ante;
-            public MotelyBossBlind Boss => _data.Boss;
-            public MotelyVoucher Voucher => _data.Voucher;
-            public List<MotelyTag> Tags => _data.Tags;
-            public List<ShopItem> ShopQueue => _data.ShopQueue.Select(s => new ShopItem(s)).ToList();
-            public List<PackContent> Packs => _data.Packs.Select(p => new PackContent(p)).ToList();
-        }
-
-        public class ShopItem(SeedAnalysisData.ShopItem data)
-        {
-            private readonly SeedAnalysisData.ShopItem _data = data;
-
-            public int Slot => _data.Slot;
-            public MotelyItem Item => _data.Item;
-            public string FormattedName => _data.FormattedName;
-        }
-
-        public class PackContent(SeedAnalysisData.PackContent data)
-        {
-            private readonly SeedAnalysisData.PackContent _data = data;
-
-            public MotelyBoosterPack PackType => _data.PackType;
-            public MotelyBoosterPackSize PackSize => _data.PackSize;
-            public List<MotelyItem> Cards => _data.Cards;
-            public string FormattedName => _data.FormattedName;
-            public List<string> FormattedContents => _data.FormattedContents;
-
-            // Add the missing "Contents" property that the UI expects
-            public List<MotelyItem> Contents => _data.Cards;
-        }
-    }
+    public sealed record class MotelySeedAnalysisConfig
+    (
+        string Seed,
+        MotelyDeck Deck,
+        MotelyStake Stake
+    );
 
     /// <summary>
     /// Contains all analysis data for a seed
     /// </summary>
-    public class SeedAnalysisData
+    public sealed record class MotelySeedAnalysis
+    (
+        string? Error,
+        IReadOnlyList<MotelyAnteAnalysis> Antes
+    )
     {
-        public string Seed { get; set; } = "";
-        public MotelyDeck Deck { get; set; }
-        public MotelyStake Stake { get; set; }
-        public string? Error { get; set; }
-        public List<AnteData> Antes { get; set; } = new();
 
-        public class AnteData
+        public override string ToString()
         {
-            public int Ante { get; set; }
-            public MotelyBossBlind Boss { get; set; }
-            public MotelyVoucher Voucher { get; set; }
-            public List<MotelyTag> Tags { get; set; } = new();
-            public List<ShopItem> ShopQueue { get; set; } = new();
-            public List<PackContent> Packs { get; set; } = new();
-        }
-
-        public class ShopItem
-        {
-            public int Slot { get; set; }
-            public MotelyItem Item { get; set; }
-            public string FormattedName => FormatUtils.FormatItem(Item);
-        }
-
-        public class PackContent
-        {
-            public MotelyBoosterPack PackType { get; set; }
-            public MotelyBoosterPackSize PackSize { get; set; }
-            public List<MotelyItem> Cards { get; set; } = new();
-
-            public string FormattedName => FormatUtils.FormatPackName(PackType);
-            public List<string> FormattedContents => Cards.ConvertAll(c => FormatUtils.FormatItem(c));
-        }
-    }
-
-    /// <summary>
-    /// Console output formatter for seed analysis
-    /// </summary>
-    public static class ConsoleFormatter
-    {
-        public static void Print(SeedAnalysisData data)
-        {
-            if (!string.IsNullOrEmpty(data.Error))
+            if (!string.IsNullOrEmpty(Error))
             {
-                Console.WriteLine($"❌ Error analyzing seed: {data.Error}");
-                return;
+                return $"❌ Error analyzing seed: {Error}";
             }
 
+            StringBuilder sb = new();
+
             // Match TheSoul's format exactly
-            foreach (var ante in data.Antes)
+            foreach (var ante in Antes)
             {
-                Console.WriteLine($"==ANTE {ante.Ante}==");
-                Console.WriteLine($"Boss: {FormatUtils.FormatBoss(ante.Boss)}");
-                Console.WriteLine($"Voucher: {FormatUtils.FormatVoucher(ante.Voucher)}");
+                sb.AppendLine($"==ANTE {ante.Ante}==");
+                sb.AppendLine($"Boss: {FormatUtils.FormatBoss(ante.Boss)}");
+                sb.AppendLine($"Voucher: {FormatUtils.FormatVoucher(ante.Voucher)}");
 
                 // Tags
-                var tagNames = ante.Tags.ConvertAll(t => FormatUtils.FormatTag(t));
-                Console.WriteLine($"Tags: {string.Join(", ", tagNames)}");
+                sb.AppendLine($"Tags: {FormatUtils.FormatTag(ante.SmallBlindTag)}, {FormatUtils.FormatTag(ante.BigBlindTag)}");
 
                 // Shop Queue - match TheSoul format exactly: "Shop Queue: " on its own line, then numbered items
-                Console.WriteLine("Shop Queue: ");
-                foreach (var item in ante.ShopQueue)
+                sb.AppendLine("Shop Queue: ");
+                foreach ((int i, MotelyItem item) in ante.ShopQueue.Index())
                 {
-                    Console.WriteLine($"{item.Slot}) {item.FormattedName}");
+                    sb.AppendLine($"{i + 1}) {FormatUtils.FormatItem(item)}");
                 }
-                Console.WriteLine();
+                sb.AppendLine();
 
                 // Packs - match Immolate format exactly: "Pack Name - Card1, Card2, Card3"
-                Console.WriteLine("Packs: ");
+                sb.AppendLine("Packs: ");
                 foreach (var pack in ante.Packs)
                 {
                     // Format: "Pack Name - Card1, Card2, Card3"
-                    var contents = pack.FormattedContents.Count > 0
-                        ? " - " + string.Join(", ", pack.FormattedContents)
+                    var contents = pack.Items.Count > 0
+                        ? " - " + string.Join(", ", pack.Items.Select(item => FormatUtils.FormatItem(item)))
                         : "";
-                    Console.WriteLine($"{pack.FormattedName}{contents}");
+                    sb.AppendLine($"{FormatUtils.FormatPackName(pack.Type)}{contents}");
                 }
-                Console.WriteLine();
+                sb.AppendLine();
             }
+
+            return sb.ToString();
         }
     }
 
+    public sealed record class MotelyAnteAnalysis
+    (
+        int Ante,
+        MotelyBossBlind Boss,
+        MotelyVoucher Voucher,
+        MotelyTag SmallBlindTag,
+        MotelyTag BigBlindTag,
+        IReadOnlyList<MotelyItem> ShopQueue,
+        IReadOnlyList<MotelyBoosterPackAnalysis> Packs
+    );
+
+    public sealed record class MotelyBoosterPackAnalysis
+    (
+        MotelyBoosterPack Type,
+        IReadOnlyList<MotelyItem> Items
+    );
+    
     /// <summary>
     /// Shared formatting utilities
     /// </summary>
@@ -454,23 +367,37 @@ namespace Motely
     /// <summary>
     /// Filter descriptor for seed analysis
     /// </summary>
-    public readonly struct AnalyzerFilterDesc(SeedAnalysisData data) : IMotelySeedFilterDesc<AnalyzerFilterDesc.AnalyzerFilter>
+    public sealed class AnalyzerFilterDesc() : IMotelySeedFilterDesc<AnalyzerFilterDesc.AnalyzerFilter>
     {
-        private readonly SeedAnalysisData _data = data;
+        public MotelySeedAnalysis? LastAnalysis { get; private set; } = null;
 
-        public readonly AnalyzerFilter CreateFilter(ref MotelyFilterCreationContext ctx)
+        public AnalyzerFilter CreateFilter(ref MotelyFilterCreationContext ctx)
         {
-            _ = ctx; // Required by interface
-            return new AnalyzerFilter(_data);
+            return new AnalyzerFilter(this);
         }
 
-        public readonly struct AnalyzerFilter(SeedAnalysisData data) : IMotelySeedFilter
+        public readonly struct AnalyzerFilter(AnalyzerFilterDesc filterDesc) : IMotelySeedFilter
         {
-            private readonly SeedAnalysisData _data = data;
+
+            public AnalyzerFilterDesc FilterDesc { get; } = filterDesc;
 
             public readonly VectorMask Filter(ref MotelyVectorSearchContext ctx)
             {
                 return ctx.SearchIndividualSeeds(CheckSeed);
+            }
+
+            private ref struct AnteAnalysisState
+            {
+                public MotelySingleTarotStream ArcanaStream;
+                public readonly bool HasArcanaStream => !ArcanaStream.IsNull;
+                public MotelySinglePlanetStream CelestialStream;
+                public readonly bool HasCelestialStream => !CelestialStream.IsNull;
+                public MotelySingleSpectralStream SpectralStream;
+                public readonly bool HasSpectralStream => !SpectralStream.IsNull;
+                public MotelySingleStandardCardStream StandardStream;
+                public readonly bool HasStandardStream => !StandardStream.IsInvalid;
+                public MotelySingleJokerStream BuffoonStream;
+                public readonly bool HasBuffoonStream => !BuffoonStream.IsNull;
             }
 
             public readonly bool CheckSeed(ref MotelySingleSearchContext ctx)
@@ -478,75 +405,76 @@ namespace Motely
                 // Create voucher state to track activated vouchers across antes
                 MotelyRunState voucherState = new();
 
+                List<MotelyAnteAnalysis> antes = [];
+
                 // Analyze each ante
                 for (int ante = 1; ante <= 8; ante++)
                 {
-                    var anteData = new SeedAnalysisData.AnteData { Ante = ante };
 
-                    // Track streams for pack contents to maintain state between packs of same type
-                    var arcanaStream = default(MotelySingleTarotStream);
-                    var celestialStream = default(MotelySinglePlanetStream);
-                    var spectralStream = default(MotelySingleSpectralStream);
-                    var standardStream = default(MotelySingleStandardCardStream);
-                    var buffoonStream = default(MotelySingleJokerStream);
-                    bool arcanaStreamInit = false;
-                    bool celestialStreamInit = false;
-                    bool spectralStreamInit = false;
-                    bool standardStreamInit = false;
-                    bool buffoonStreamInit = false;
+                    AnteAnalysisState state = new()
+                    {
+                        ArcanaStream = default,
+                        CelestialStream = default,
+                        SpectralStream = default,
+                        StandardStream = MotelySingleStandardCardStream.Invalid,
+                        BuffoonStream = default
+                    };
 
                     // Boss
-                    anteData.Boss = ctx.GetBossForAnte(ante);
+                    MotelyBossBlind boss = ctx.GetBossForAnte(ante);
 
                     // Voucher - get with state for proper progression
-                    anteData.Voucher = ctx.GetAnteFirstVoucher(ante, voucherState);
+                    MotelyVoucher voucher = ctx.GetAnteFirstVoucher(ante, voucherState);
 
                     // TEST: Activate ALL vouchers from ante 1 onwards
-                    voucherState.ActivateVoucher(anteData.Voucher);
+                    // if (ShouldActivateVoucher(voucher))
+                    voucherState.ActivateVoucher(voucher);
 
                     // Tags
-                    var tagStream = ctx.CreateTagStream(ante);
-                    var smallTag = ctx.GetNextTag(ref tagStream);
-                    var bigTag = ctx.GetNextTag(ref tagStream);
-                    if (smallTag != 0) anteData.Tags.Add(smallTag);
-                    if (bigTag != 0) anteData.Tags.Add(bigTag);
+                    MotelySingleTagStream tagStream = ctx.CreateTagStream(ante);
+
+                    MotelyTag smallTag = ctx.GetNextTag(ref tagStream);
+                    MotelyTag bigTag = ctx.GetNextTag(ref tagStream);
 
                     // Shop Queue
-                    var shopStream = ctx.CreateShopItemStream(ante);
+                    MotelySingleShopItemStream shopStream = ctx.CreateShopItemStream(ante);
+
                     int maxSlots = ante == 1 ? 15 : 50;
+                    MotelyItem[] shopItems = new MotelyItem[maxSlots];
+
                     for (int i = 0; i < maxSlots; i++)
                     {
-                        var item = ctx.GetNextShopItem(ref shopStream);
-                        anteData.ShopQueue.Add(new SeedAnalysisData.ShopItem
-                        {
-                            Slot = i + 1,
-                            Item = item
-                        });
+                        shopItems[i] = ctx.GetNextShopItem(ref shopStream);
                     }
 
                     // Packs - Get the actual shop packs (not tag-generated ones)
                     // Balatro generates 2 base shop packs, then tags can add more up to 4 in ante 1 or 6 in other antes
-                    var packStream = ctx.CreateBoosterPackStream(ante, isCached: false);
+                    var packStream = ctx.CreateBoosterPackStream(ante);
+
                     int maxPacks = ante == 1 ? 4 : 6;
+                    MotelyBoosterPackAnalysis[] packs = new MotelyBoosterPackAnalysis[maxPacks];
 
                     // Get all packs up to the maximum
                     for (int i = 0; i < maxPacks; i++)
                     {
-                        var pack = ctx.GetNextBoosterPack(ref packStream);
-                        var packContent = ExtractPackContents(ref ctx, ante, pack, i,
-                            ref arcanaStream, ref arcanaStreamInit,
-                            ref celestialStream, ref celestialStreamInit,
-                            ref spectralStream, ref spectralStreamInit,
-                            ref standardStream, ref standardStreamInit,
-                            ref buffoonStream, ref buffoonStreamInit);
-                        if (packContent != null)
-                        {
-                            anteData.Packs.Add(packContent);
-                        }
+                        MotelyBoosterPack pack = ctx.GetNextBoosterPack(ref packStream);
+                        MotelySingleItemSet packContent = GetPackContents(ref ctx, ante, pack, ref state);
+
+                        packs[i] = new(pack, packContent.AsArray());
                     }
 
-                    _data.Antes.Add(anteData);
+                    antes.Add(new(
+                        ante,
+                        boss,
+                        voucher,
+                        smallTag,
+                        bigTag,
+                        shopItems,
+                        packs
+                    ));
                 }
+
+                FilterDesc.LastAnalysis = new(null, antes);
 
                 return false; // Always return false since we're just analyzing
             }
@@ -563,100 +491,53 @@ namespace Motely
             }
 
 
-            private static SeedAnalysisData.PackContent ExtractPackContents(
-                ref MotelySingleSearchContext ctx, int ante, MotelyBoosterPack pack, int packSlot,
-                ref MotelySingleTarotStream arcanaStream, ref bool arcanaStreamInit,
-                ref MotelySinglePlanetStream celestialStream, ref bool celestialStreamInit,
-                ref MotelySingleSpectralStream spectralStream, ref bool spectralStreamInit,
-                ref MotelySingleStandardCardStream standardStream, ref bool standardStreamInit,
-                ref MotelySingleJokerStream buffoonStream, ref bool buffoonStreamInit)
+            private static MotelySingleItemSet GetPackContents(
+                ref MotelySingleSearchContext ctx, int ante, MotelyBoosterPack pack, ref AnteAnalysisState state
+            )
             {
                 var packType = pack.GetPackType();
                 var packSize = pack.GetPackSize();
-                var packContent = new SeedAnalysisData.PackContent
-                {
-                    PackType = pack,
-                    PackSize = packSize
-                };
 
                 switch (packType)
                 {
                     case MotelyBoosterPackType.Arcana:
-                        if (!arcanaStreamInit)
-                        {
-                            arcanaStream = ctx.CreateArcanaPackTarotStream(ante, isCached: false);
-                            arcanaStreamInit = true;
-                        }
-                        int arcanaCount = packType.GetCardCount(packSize);
-                        var arcanaItemSet = new MotelySingleItemSet();
-                        for (int i = 0; i < arcanaCount; i++)
-                        {
-                            var tarot = ctx.GetNextTarot(ref arcanaStream, arcanaItemSet);
-                            packContent.Cards.Add(tarot);
-                            arcanaItemSet.Append(tarot);
-                        }
-                        break;
+
+                        if (!state.HasArcanaStream)
+                            state.ArcanaStream = ctx.CreateArcanaPackTarotStream(ante);
+
+                        return ctx.GetNextArcanaPackContents(ref state.ArcanaStream, packSize);
 
                     case MotelyBoosterPackType.Celestial:
-                        if (!celestialStreamInit)
-                        {
-                            celestialStream = ctx.CreateCelestialPackPlanetStream(ante);
-                            celestialStreamInit = true;
-                        }
-                        int celestialCount = packType.GetCardCount(packSize);
-                        var celestialItemSet = new MotelySingleItemSet();
-                        for (int i = 0; i < celestialCount; i++)
-                        {
-                            var planet = ctx.GetNextPlanet(ref celestialStream, celestialItemSet);
-                            packContent.Cards.Add(planet);
-                            celestialItemSet.Append(planet);
-                        }
-                        break;
+
+                        if (!state.HasCelestialStream)
+                            state.CelestialStream = ctx.CreateCelestialPackPlanetStream(ante);
+
+                        return ctx.GetNextCelestialPackContents(ref state.CelestialStream, packSize);
 
                     case MotelyBoosterPackType.Spectral:
-                        if (!spectralStreamInit)
-                        {
-                            spectralStream = ctx.CreateSpectralPackSpectralStream(ante);
-                            spectralStreamInit = true;
-                        }
-                        int spectralCount = packType.GetCardCount(packSize);
-                        var spectralItemSet = new MotelySingleItemSet();
-                        for (int i = 0; i < spectralCount; i++)
-                        {
-                            var spectral = ctx.GetNextSpectral(ref spectralStream, spectralItemSet);
-                            packContent.Cards.Add(spectral);
-                            spectralItemSet.Append(spectral);
-                        }
-                        break;
+
+                        if (!state.HasSpectralStream)
+                            state.SpectralStream = ctx.CreateSpectralPackSpectralStream(ante);
+
+                        return ctx.GetNextSpectralPackContents(ref state.SpectralStream, packSize);
 
                     case MotelyBoosterPackType.Buffoon:
-                        if (!buffoonStreamInit)
-                        {
-                            buffoonStream = ctx.CreateBuffoonPackJokerStream(ante, 0);
-                            buffoonStreamInit = true;
-                        }
-                        int buffoonCount = packType.GetCardCount(packSize);
-                        for (int i = 0; i < buffoonCount; i++)
-                        {
-                            packContent.Cards.Add(ctx.GetNextJoker(ref buffoonStream));
-                        }
-                        break;
+
+                        if (!state.HasBuffoonStream)
+                            state.BuffoonStream = ctx.CreateBuffoonPackJokerStream(ante);
+
+                        return ctx.GetNextBuffoonPackContents(ref state.BuffoonStream, packSize);
 
                     case MotelyBoosterPackType.Standard:
-                        if (!standardStreamInit)
-                        {
-                            standardStream = ctx.CreateStandardPackCardStream(ante);
-                            standardStreamInit = true;
-                        }
-                        int standardCount = packType.GetCardCount(packSize);
-                        for (int i = 0; i < standardCount; i++)
-                        {
-                            packContent.Cards.Add(ctx.GetNextStandardCard(ref standardStream));
-                        }
-                        break;
-                }
 
-                return packContent;
+                        if (!state.HasStandardStream)
+                            state.StandardStream = ctx.CreateStandardPackCardStream(ante);
+
+                        return ctx.GetNextStandardPackContents(ref state.StandardStream, packSize);
+
+                    default:
+                        throw new InvalidEnumArgumentException();
+                }
             }
         }
     }

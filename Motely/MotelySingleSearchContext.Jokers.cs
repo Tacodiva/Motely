@@ -126,6 +126,22 @@ unsafe ref partial struct MotelySingleSearchContext
         };
     }
 
+    public MotelySingleItemSet GetNextBuffoonPackContents(ref MotelySingleJokerStream jokerStream, MotelyBoosterPackSize size)
+    => GetNextBuffoonPackContents(ref jokerStream, MotelyBoosterPackType.Buffoon.GetCardCount(size));
+
+    public MotelySingleItemSet GetNextBuffoonPackContents(ref MotelySingleJokerStream jokerStream, int size)
+    {
+        Debug.Assert(size <= MotelySingleItemSet.MaxLength);
+
+        MotelySingleItemSet pack = new();
+
+        for (int i = 0; i < size; i++)
+            pack.Append(GetNextJoker(ref jokerStream)); // TODO Duplicates?
+
+        return pack;
+    }
+
+
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif

@@ -174,6 +174,7 @@ public interface IMotelySearch : IDisposable
     public int CompletedBatchCount { get; }
 
     public void Start();
+    public void AwaitCompletion();
     public void Pause();
 }
 
@@ -299,6 +300,12 @@ public unsafe sealed class MotelySearch<TBaseFilter> : IInternalMotelySearch
 
         _elapsedTime.Start();
         _unpauseBarrier.SignalAndWait();
+    }
+
+    public void AwaitCompletion()
+    {
+        foreach (MotelySearchThread searchThread in _threads)
+            searchThread.Thread.Join();
     }
 
     public void Pause()

@@ -3,6 +3,14 @@ namespace Motely;
 
 public ref struct MotelySingleStandardCardStream
 {
+
+    public static MotelySingleStandardCardStream Invalid => new()
+    {
+        CardPrngStream = MotelySinglePrngStream.Invalid
+    };
+    
+    public readonly bool IsInvalid => CardPrngStream.IsInvalid;
+
     public MotelySinglePrngStream CardPrngStream;
     public MotelySinglePrngStream HasEnhancementPrngStream;
     public MotelySinglePrngStream EnhancementPrngStream;

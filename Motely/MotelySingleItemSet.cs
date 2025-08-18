@@ -94,4 +94,20 @@ public ref struct MotelySingleItemSet
 
         return sb.ToString();
     }
+
+    public MotelyItem this[int i]
+    {
+        get => GetItem(i);
+        set => GetItemRef(ref this, i) = value;
+    }
+
+    public MotelyItem[] AsArray()
+    {
+        MotelyItem[] array = new MotelyItem[Length];
+
+        for (int i = 0; i < Length; i++)
+            array[i] = this[i];
+
+        return array;
+    }
 }

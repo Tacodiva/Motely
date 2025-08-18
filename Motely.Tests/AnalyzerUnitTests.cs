@@ -11,7 +11,7 @@ public sealed class AnalyzerUnitTests
         // Arrange
         string seed = "UNITTEST";
 
-        
+
 
         // Act
         var actualOutput = GetAnalyzerOutput(seed);
@@ -39,24 +39,7 @@ public sealed class AnalyzerUnitTests
 
     private string GetAnalyzerOutput(string seed)
     {
-        // Capture console output
-        var originalOut = Console.Out;
-        var stringWriter = new StringWriter();
-        Console.SetOut(stringWriter);
-
-        try
-        {
-            // Run the analyzer
-            SeedAnalyzer.AnalyzeToConsole(seed, MotelyDeck.Red, MotelyStake.White);
-
-            // Get the output
-            return stringWriter.ToString();
-        }
-        finally
-        {
-            // Restore console output
-            Console.SetOut(originalOut);
-        }
+        return SeedAnalyzer.Analyze(new(seed, MotelyDeck.Red, MotelyStake.White)).ToString();
     }
 
     // This method is now only used by other tests that don't use Verify yet

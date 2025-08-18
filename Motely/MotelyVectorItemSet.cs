@@ -108,7 +108,23 @@ public ref struct MotelyVectorItemSet
             sb.Append(']');
         }
         sb.Append(']');
-        
+
         return sb.ToString();
+    }
+
+    public MotelyItemVector this[int i]
+    {
+        get => GetItem(i);
+        set => GetItemRef(ref this, i) = value;
+    }
+
+    public MotelyItemVector[] AsArray()
+    {
+        MotelyItemVector[] array = new MotelyItemVector[Length];
+
+        for (int i = 0; i < Length; i++)
+            array[i] = this[i];
+
+        return array;
     }
 }
