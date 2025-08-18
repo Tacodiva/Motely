@@ -1,5 +1,6 @@
 
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
@@ -130,9 +131,72 @@ public readonly unsafe ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+    private static double Fract(double x)
+    {
+        ref ulong xInt = ref Unsafe.As<double, ulong>(ref x);
+
+        const ulong DblExpo = 0x7FF0000000000000;
+        const ulong DblMant = 0x000FFFFFFFFFFFFF;
+
+        const int DblMantSZ = 52;
+
+        const int DblExpoBias = 1023;
+
+        ulong expo = (xInt & DblExpo) >> DblMantSZ;
+
+        if (expo < DblExpoBias) return x;
+
+        // We don't have to worry about this edge case
+        
+        // const int DblExpoSZ = 11;
+        // if (expo == ((1 << DblExpoSZ) - 1)) return double.NaN;
+
+        ulong expoBiased = expo - DblExpoBias;
+
+        if (expoBiased > DblMantSZ) return 0;
+
+        ulong mant = xInt & DblMant;
+        ulong fractMant = mant & ((1ul << (int)(DblMantSZ - expoBiased)) - 1);
+
+        if (fractMant == 0) return 0;
+
+        int fractLzcnt = BitOperations.LeadingZeroCount(fractMant) - (64 - DblMantSZ);
+        ulong resExpo = (expo - (ulong)fractLzcnt - 1) << DblMantSZ;
+        ulong resMant = (fractMant << (fractLzcnt + 1)) & DblMant;
+
+        ulong res = resExpo | resMant;
+
+        return Unsafe.As<ulong, double>(ref res);
+    }
+
+    private static readonly double InvPrec = Math.Pow(10.0, 13);
+    private static readonly double TwoInvPrec = Math.Pow(2.0, 13);
+    private static readonly double FiveInvPrec = Math.Pow(5.0, 13);
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static double Round13(double x)
+    {
+        double normalCase = Math.Round(x * InvPrec, MidpointRounding.AwayFromZero) / InvPrec;
+
+        if (normalCase == Math.Round(Math.BitDecrement(x) * InvPrec, MidpointRounding.AwayFromZero) / InvPrec)
+            return normalCase;
+
+        double truncated = Fract(x * TwoInvPrec) * FiveInvPrec;
+
+        if (Fract(truncated) >= 0.5)
+            return (Math.Floor(x * InvPrec) + 1) / InvPrec;
+
+        return Math.Floor(x * InvPrec) / InvPrec;
+    }
+
+#if !DEBUG
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
     private static double IteratePRNG(double state)
     {
-        return Math.Round((state * 1.72431234 + 2.134453429141) % 1, 13);
+        return Round13(Fract(state * 1.72431234 + 2.134453429141));
     }
 
 #if !DEBUG
