@@ -99,7 +99,7 @@ unsafe partial struct MotelyVectorSearchContext
         {
             Rarity = rarity,
             JokerPrngStream = CreatePrngStream(MotelyPrngKeys.FixedRarityJoker(rarity, source, ante), isCached),
-            EditionPrngStream = flags.HasFlag(MotelyJokerStreamFlags.ExcludeEdition) ?
+            EditionPrngStream = !flags.HasFlag(MotelyJokerStreamFlags.ExcludeEdition) ?
                 CreatePrngStream(MotelyPrngKeys.JokerEdition + source + ante, isCached) : MotelyVectorPrngStream.Invalid,
             EternalPerishablePrngStream = (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeStickers) && Stake >= MotelyStake.Black) ?
                 CreatePrngStream(eternalPerishableSource + ante, isCached) : MotelyVectorPrngStream.Invalid,
