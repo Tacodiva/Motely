@@ -143,7 +143,7 @@ ref partial struct MotelySingleSearchContext
 
             Spectral = (MotelyItemType)MotelyItemTypeCategory.SpectralCard | (MotelyItemType)GetNextRandomInt(
                 ref GetResamplePrngStream(ref SpectralStream.ResampleStream, SpectralStream.ResampleKey, resampleCount),
-                0, MotelyEnum<MotelyVoucher>.ValueCount
+                0, MotelyEnum<MotelySpectralCard>.ValueCount
             );
 
             ++resampleCount;

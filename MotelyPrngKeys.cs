@@ -32,6 +32,7 @@ public static class MotelyPrngKeys
 
     public const string BuffoonJokerEternalPerishableSource = "packetper";
     public const string BuffoonJokerRentalSource = "packssjr";
+    public const string BuffoonPackItemSource = "buf";
 
     public const string JokerSoulSource = "sou";
     public const string JokerRarity = "rarity";

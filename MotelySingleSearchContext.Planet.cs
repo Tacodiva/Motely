@@ -94,7 +94,7 @@ ref partial struct MotelySingleSearchContext
 
             planet = (MotelyItemType)MotelyItemTypeCategory.PlanetCard | (MotelyItemType)GetNextRandomInt(
                 ref GetResamplePrngStream(ref planetStream.ResampleStream, planetStream.ResampleKey, resampleCount),
-                0, MotelyEnum<MotelyVoucher>.ValueCount
+                0, MotelyEnum<MotelyPlanetCard>.ValueCount
             );
 
             ++resampleCount;

@@ -1,29 +1,45 @@
-
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
 
 namespace Motely;
 
 public unsafe static class MotelyVectorUtils
 {
-    public static readonly bool IsAccelerated;
-
-    static MotelyVectorUtils()
-    {
-        IsAccelerated = Avx512F.IsSupported && Avx2.IsSupported;
-    }
+    public static bool IsAccelerated => Vector512.IsHardwareAccelerated;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector256<int> ConvertToVector256Int32(in Vector512<double> vector)
     {
-        return Avx512F.ConvertToVector256Int32WithTruncation(vector);
+        if (Avx512F.IsSupported)
+        {
+            return Avx512F.ConvertToVector256Int32WithTruncation(vector);
+        }
+        else
+        {
+            Vector512<long> integerVector = Vector512.ConvertToInt64(vector);
+            return Vector256.Narrow(integerVector.GetLower(), integerVector.GetUpper());
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector256<int> ShiftLeft(in Vector256<int> value, in Vector256<int> shiftCount)
     {
-        return Avx2.ShiftLeftLogicalVariable(value, shiftCount.AsUInt32());
+        if (AdvSimd.IsSupported)
+        {
+            return Vector256.Create(
+                AdvSimd.ShiftLogical(value.GetLower(), shiftCount.GetLower()),
+                AdvSimd.ShiftLogical(value.GetUpper(), shiftCount.GetUpper())
+            );
+        }
+
+        if (Avx2.IsSupported)
+        {
+            return Avx2.ShiftLeftLogicalVariable(value, shiftCount.AsUInt32());
+        }
+
+        throw new PlatformNotSupportedException();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -52,9 +68,7 @@ public unsafe static class MotelyVectorUtils
         if (sizeof(TFrom) != 4) throw new InvalidOperationException();
         if (sizeof(TTo) != 8) throw new InvalidOperationException();
 
-        Vector256<long> low = Avx2.ConvertToVector256Int64(smallMask.AsInt32().GetLower());
-        Vector256<long> high = Avx2.ConvertToVector256Int64(smallMask.AsInt32().GetUpper());
-
+        (Vector256<long> low, Vector256<long> high) = Vector256.Widen(smallMask.AsInt32());
         return Vector512.Create(low, high).As<long, TTo>();
     }
 
@@ -85,7 +99,7 @@ public unsafe static class MotelyVectorUtils
         if (sizeof(TTo) != 4) throw new InvalidOperationException();
         if (sizeof(TFrom) != 8) throw new InvalidOperationException();
 
-        return Avx512F.ConvertToVector256Int32(smallMask.AsUInt64()).As<int, TTo>();
+        return Vector256.Narrow(smallMask.GetLower().AsUInt64(), smallMask.GetUpper().AsUInt64()).As<uint, TTo>();
     }
 
 #if !DEBUG
