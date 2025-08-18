@@ -1,0 +1,475 @@
+==ANTE 1==
+Boss: The Window
+Voucher: Tarot Merchant
+Tags: Speed Tag, Speed Tag
+Shop Queue: 
+1) Hallucination
+2) Stone Joker
+3) Abstract Joker
+4) Superposition
+5) Gluttonous Joker
+6) Superposition
+7) The Empress
+8) Riff-raff
+9) Judgement
+10) Obelisk
+11) Red Card
+12) Glass Joker
+13) Gift Card
+14) Mercury
+15) Saturn
+
+Packs: 
+Buffoon Pack - Constellation, Cloud 9
+Mega Standard Pack - Glass 7 of Clubs, Gold Seal 6 of Clubs, 7 of Diamonds, Jack of Spades, Jack of Spades
+Jumbo Celestial Pack - Jupiter, Planet X, Saturn, Mars, Pluto
+Spectral Pack - Wraith, Talisman
+
+==ANTE 2==
+Boss: The Mouth
+Voucher: Planet Merchant
+Tags: D6 Tag, Economy Tag
+Shop Queue: 
+1) The Magician
+2) Foil Scholar
+3) Planet X
+4) The Lovers
+5) Justice
+6) Loyalty Card
+7) Turtle Bean
+8) Shoot the Moon
+9) The Empress
+10) Banner
+11) Even Steven
+12) Splash
+13) Mercury
+14) To Do List
+15) Pluto
+16) Droll Joker
+17) The Emperor
+18) Zany Joker
+19) Dusk
+20) Scary Face
+21) Ride the Bus
+22) Ceres
+23) Earth
+24) Business Card
+25) Red Card
+26) Troubadour
+27) Walkie Talkie
+28) Jupiter
+29) Diet Cola
+30) Mad Joker
+31) Marble Joker
+32) Hack
+33) Earth
+34) The World
+35) The Devil
+36) The Hierophant
+37) Gluttonous Joker
+38) Arrowhead
+39) Ride the Bus
+40) Popcorn
+41) The World
+42) Holographic Hanging Chad
+43) Eris
+44) Uranus
+45) Brainstorm
+46) Chaos the Clown
+47) Bootstraps
+48) Certificate
+49) Business Card
+50) Gluttonous Joker
+
+Packs: 
+Arcana Pack - Judgement, The Empress, The Devil
+Standard Pack - Red Seal Stone Ace of Clubs, 6 of Hearts, Red Seal Lucky Jack of Diamonds
+Standard Pack - Purple Seal Bonus 2 of Clubs, 4 of Clubs, Mult 5 of Hearts
+Celestial Pack - Mars, Mercury, Eris
+Celestial Pack - Jupiter, Neptune, Eris
+Mega Arcana Pack - Strength, The Fool, The Sun, The High Priestess, Justice
+
+==ANTE 3==
+Boss: The House
+Voucher: Telescope
+Tags: Coupon Tag, Speed Tag
+Shop Queue: 
+1) Droll Joker
+2) Drunkard
+3) Raised Fist
+4) Business Card
+5) Mars
+6) Crazy Joker
+7) Mercury
+8) Banner
+9) Swashbuckler
+10) Mercury
+11) Scholar
+12) Acrobat
+13) Mad Joker
+14) Earth
+15) Banner
+16) The Family
+17) Foil Superposition
+18) Blackboard
+19) Business Card
+20) Neptune
+21) Droll Joker
+22) The Sun
+23) The High Priestess
+24) Mars
+25) Banner
+26) Bull
+27) Mercury
+28) Polychrome Wily Joker
+29) Matador
+30) Juggler
+31) Trading Card
+32) 8 Ball
+33) The Empress
+34) Blue Joker
+35) Cavendish
+36) Swashbuckler
+37) Joker
+38) Temperance
+39) The Magician
+40) Shortcut
+41) Trading Card
+42) Zany Joker
+43) Onyx Agate
+44) The Tower
+45) The Sun
+46) Foil Hallucination
+47) The Lovers
+48) Juggler
+49) Drunkard
+50) Death
+
+Packs: 
+Mega Standard Pack - 3 of Diamonds, 5 of Clubs, Ace of Diamonds, 2 of Diamonds, Steel 5 of Diamonds
+Mega Arcana Pack - The Devil, The High Priestess, The Wheel of Fortune, The Lovers, Temperance
+Standard Pack - 4 of Clubs, 5 of Spades, 8 of Clubs
+Buffoon Pack - Erosion, Crafty Joker
+Jumbo Celestial Pack - Ceres, Eris, Planet X, Jupiter, Venus
+Jumbo Celestial Pack - Pluto, Saturn, Neptune, Earth, Uranus
+
+==ANTE 4==
+Boss: The Tooth
+Voucher: Crystal Ball
+Tags: Negative Tag, Handy Tag
+Shop Queue: 
+1) Square Joker
+2) The Wheel of Fortune
+3) Satellite
+4) Mime
+5) Half Joker
+6) Holographic Misprint
+7) Bootstraps
+8) Green Joker
+9) The Star
+10) Neptune
+11) The Tower
+12) Eris
+13) The Devil
+14) Bloodstone
+15) The World
+16) Vampire
+17) Cavendish
+18) Mr. Bones
+19) The Moon
+20) Neptune
+21) Droll Joker
+22) Superposition
+23) Uranus
+24) The Chariot
+25) Ceres
+26) Drunkard
+27) Blue Joker
+28) Fibonacci
+29) Odd Todd
+30) Stone Joker
+31) Half Joker
+32) Shoot the Moon
+33) Square Joker
+34) Hallucination
+35) Hit the Road
+36) Business Card
+37) Eris
+38) Holographic Golden Ticket
+39) Greedy Joker
+40) Space Joker
+41) Golden Ticket
+42) Drunkard
+43) Square Joker
+44) The Tower
+45) Troubadour
+46) The High Priestess
+47) Devious Joker
+48) Green Joker
+49) Jupiter
+50) Banner
+
+Packs: 
+Jumbo Arcana Pack - Judgement, The Lovers, The Hanged Man, The Hermit, Justice
+Arcana Pack - The Fool, The Magician, Temperance
+Jumbo Celestial Pack - Earth, Ceres, Jupiter, Eris, Planet X
+Jumbo Celestial Pack - Mercury, Saturn, Ceres, Neptune, Mars
+Jumbo Celestial Pack - Venus, Pluto, Jupiter, Mars, Neptune
+Buffoon Pack - Runner, Seeing Double
+
+==ANTE 5==
+Boss: The Fish
+Voucher: Paint Brush
+Tags: Garbage Tag, Garbage Tag
+Shop Queue: 
+1) Ice Cream
+2) Mad Joker
+3) The Empress
+4) Smeared Joker
+5) Neptune
+6) Banner
+7) Delayed Gratification
+8) Smiley Face
+9) The Hanged Man
+10) The Emperor
+11) Red Card
+12) Four Fingers
+13) Fortune Teller
+14) The Hierophant
+15) Gros Michel
+16) Neptune
+17) Ancient Joker
+18) Flower Pot
+19) Jupiter
+20) Jupiter
+21) Astronomer
+22) Ceres
+23) The Lovers
+24) Seance
+25) Temperance
+26) The Chariot
+27) Lusty Joker
+28) Gift Card
+29) The Chariot
+30) Gluttonous Joker
+31) Smeared Joker
+32) Uranus
+33) Earth
+34) Ride the Bus
+35) Lusty Joker
+36) Hanging Chad
+37) Square Joker
+38) Abstract Joker
+39) The High Priestess
+40) Wily Joker
+41) Pareidolia
+42) Ride the Bus
+43) Golden Joker
+44) Lusty Joker
+45) Hologram
+46) Runner
+47) Hanging Chad
+48) Juggler
+49) Fortune Teller
+50) Mercury
+
+Packs: 
+Spectral Pack - Medium, Cryptid
+Standard Pack - Bonus King of Hearts, 6 of Clubs, Wild 5 of Spades
+Jumbo Celestial Pack - Planet X, Neptune, Mars, Earth, Ceres
+Standard Pack - 7 of Hearts, 6 of Diamonds, Purple Seal Bonus 4 of Diamonds
+Celestial Pack - Venus, Planet X, Saturn
+Jumbo Standard Pack - 7 of Hearts, Holographic 10 of Spades, 6 of Spades, Gold 4 of Spades, Red Seal Jack of Spades
+
+==ANTE 6==
+Boss: The Pillar
+Voucher: Seed Money
+Tags: Rare Tag, Coupon Tag
+Shop Queue: 
+1) Egg
+2) Hallucination
+3) Sly Joker
+4) The Star
+5) Crafty Joker
+6) Turtle Bean
+7) Ice Cream
+8) Shoot the Moon
+9) Earth
+10) Erosion
+11) Even Steven
+12) Judgement
+13) The High Priestess
+14) Pluto
+15) Baseball Card
+16) Mercury
+17) The World
+18) Mystic Summit
+19) Banner
+20) Swashbuckler
+21) Hack
+22) Abstract Joker
+23) Scholar
+24) Droll Joker
+25) Golden Joker
+26) Madness
+27) Supernova
+28) Abstract Joker
+29) Joker Stencil
+30) Judgement
+31) Green Joker
+32) Fortune Teller
+33) Sixth Sense
+34) Half Joker
+35) Blueprint
+36) Justice
+37) Splash
+38) Invisible Joker
+39) Sly Joker
+40) Devious Joker
+41) Runner
+42) The Sun
+43) Certificate
+44) Ride the Bus
+45) Reserved Parking
+46) Death
+47) Spare Trousers
+48) Mad Joker
+49) Green Joker
+50) Uranus
+
+Packs: 
+Spectral Pack - Wraith, Ectoplasm
+Standard Pack - Red Seal Foil 5 of Hearts, 9 of Hearts, Glass 8 of Hearts
+Jumbo Standard Pack - 3 of Spades, Bonus 6 of Spades, Gold Queen of Clubs, Stone 7 of Clubs, 10 of Hearts
+Standard Pack - Ace of Diamonds, Blue Seal Wild 9 of Spades, Purple Seal 10 of Diamonds
+Arcana Pack - The World, The Hermit, The Hanged Man
+Jumbo Standard Pack - Mult 2 of Hearts, Stone Ace of Spades, Red Seal Stone Jack of Diamonds, 10 of Spades, 3 of Clubs
+
+==ANTE 7==
+Boss: The Water
+Voucher: Omen Globe
+Tags: Buffoon Tag, Meteor Tag
+Shop Queue: 
+1) Saturn
+2) Death
+3) Hanging Chad
+4) Hanging Chad
+5) The High Priestess
+6) Sly Joker
+7) Uranus
+8) Photograph
+9) Shoot the Moon
+10) The Wheel of Fortune
+11) Death
+12) Clever Joker
+13) Credit Card
+14) Uranus
+15) Astronomer
+16) Chaos the Clown
+17) Red Card
+18) To Do List
+19) Egg
+20) Oops! All 6s
+21) Holographic Scholar
+22) Clever Joker
+23) Trading Card
+24) Delayed Gratification
+25) Riff-raff
+26) Golden Ticket
+27) Riff-raff
+28) Sly Joker
+29) Banner
+30) Abstract Joker
+31) Reserved Parking
+32) Wee Joker
+33) Hallucination
+34) Eris
+35) Justice
+36) Supernova
+37) Hanging Chad
+38) 8 Ball
+39) The Hanged Man
+40) Jupiter
+41) Holographic Hologram
+42) The Sun
+43) Mystic Summit
+44) Gift Card
+45) Erosion
+46) Ceres
+47) Invisible Joker
+48) Mars
+49) Mystic Summit
+50) Drunkard
+
+Packs: 
+Arcana Pack - The Devil, The Wheel of Fortune, The Lovers
+Celestial Pack - Eris, Mercury, Pluto
+Mega Celestial Pack - Mars, Earth, Pluto, Jupiter, Saturn
+Mega Arcana Pack - The Star, The Lovers, The Hanged Man, Justice, The Magician
+Mega Standard Pack - Bonus 6 of Hearts, Blue Seal King of Diamonds, Queen of Hearts, Gold Seal 9 of Hearts, Bonus 5 of Hearts
+Buffoon Pack - Red Card, Mr. Bones
+
+==ANTE 8==
+Boss: Violet Vessel
+Voucher: Wasteful
+Tags: Foil Tag, Rare Tag
+Shop Queue: 
+1) Mail In Rebate
+2) Credit Card
+3) Trading Card
+4) Reserved Parking
+5) The Devil
+6) Bull
+7) Uranus
+8) Earth
+9) The Hanged Man
+10) Loyalty Card
+11) Greedy Joker
+12) The Lovers
+13) Walkie Talkie
+14) The Empress
+15) Madness
+16) Cloud 9
+17) Smiley Face
+18) The Fool
+19) The Hanged Man
+20) Mail In Rebate
+21) Mail In Rebate
+22) Reserved Parking
+23) Green Joker
+24) Jupiter
+25) Cavendish
+26) Ramen
+27) The World
+28) Hack
+29) Superposition
+30) Odd Todd
+31) Chaos the Clown
+32) Pareidolia
+33) Credit Card
+34) Egg
+35) Crafty Joker
+36) Uranus
+37) Matador
+38) Four Fingers
+39) To Do List
+40) Negative Mystic Summit
+41) To Do List
+42) Misprint
+43) Green Joker
+44) Smiley Face
+45) Negative Credit Card
+46) Holographic Stone Joker
+47) The Hierophant
+48) Swashbuckler
+49) Business Card
+50) Justice
+
+Packs: 
+Arcana Pack - Temperance, Death, The Lovers
+Celestial Pack - Ceres, Pluto, Uranus
+Arcana Pack - The Moon, The Hierophant, The Star
+Standard Pack - 2 of Clubs, Purple Seal 8 of Diamonds, Wild 5 of Spades
+Arcana Pack - The Chariot, Temperance, The Sun
+Arcana Pack - The Hermit, Temperance, The Lovers
+
