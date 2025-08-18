@@ -66,6 +66,17 @@ unsafe ref partial struct MotelySingleSearchContext
         );
     }
 
+public MotelySingleJokerStream CreateBuffoonPackJokerStream(int ante, MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default, bool isCached = false)
+{
+    // Each pack gets its own stream based on pack index
+    return CreateJokerStream(
+        MotelyPrngKeys.BuffoonPackItemSource,
+        MotelyPrngKeys.BuffoonJokerEternalPerishableSource,
+        MotelyPrngKeys.BuffoonJokerRentalSource,
+        ante, flags, isCached
+    );
+}
+
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
