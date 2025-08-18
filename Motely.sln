@@ -1,24 +1,28 @@
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.5.2.0
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motely", "Motely.csproj", "{2D381D3F-3BFA-6A25-49E2-80B19296BB80}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motely", "Motely\Motely.csproj", "{14040408-A9C3-4266-B6E8-78793794FA4A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motely.Tests", "Motely.Tests\Motely.Tests.csproj", "{59C34E24-F58D-46B8-BE4C-E7C2CA264125}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2D381D3F-3BFA-6A25-49E2-80B19296BB80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2D381D3F-3BFA-6A25-49E2-80B19296BB80}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2D381D3F-3BFA-6A25-49E2-80B19296BB80}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2D381D3F-3BFA-6A25-49E2-80B19296BB80}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {626ED3C8-F864-4684-9882-FA841C515029}
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14040408-A9C3-4266-B6E8-78793794FA4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14040408-A9C3-4266-B6E8-78793794FA4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14040408-A9C3-4266-B6E8-78793794FA4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14040408-A9C3-4266-B6E8-78793794FA4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59C34E24-F58D-46B8-BE4C-E7C2CA264125}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59C34E24-F58D-46B8-BE4C-E7C2CA264125}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59C34E24-F58D-46B8-BE4C-E7C2CA264125}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59C34E24-F58D-46B8-BE4C-E7C2CA264125}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

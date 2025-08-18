@@ -41,7 +41,7 @@ public struct PerkeoObservatoryFilterDesc() : IMotelySeedFilterDesc<PerkeoObserv
 
                 bool soulStreamInit = false;
 
-                MotelySingleBoosterPackStream boosterPackStream = searchContext.CreateBoosterPackStream(1, true);
+                MotelySingleBoosterPackStream boosterPackStream = searchContext.CreateBoosterPackStream(1, true, false);
 
                 MotelyBoosterPack pack = searchContext.GetNextBoosterPack(ref boosterPackStream);
 
