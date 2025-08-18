@@ -5,7 +5,7 @@ namespace Motely;
 
 public static class FancyConsole
 {
-
+    public static bool IsEnabled { get; set; } = true;
 
     private static string? _bottomLine;
 
