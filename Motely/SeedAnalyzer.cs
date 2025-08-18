@@ -14,11 +14,11 @@ namespace Motely
         /// </summary>
         public static SeedAnalysisData Analyze(string seed, MotelyDeck deck, MotelyStake stake)
         {
-            var data = new SeedAnalysisData 
-            { 
-                Seed = seed, 
-                Deck = deck, 
-                Stake = stake 
+            var data = new SeedAnalysisData
+            {
+                Seed = seed,
+                Deck = deck,
+                Stake = stake
             };
 
             try
@@ -29,15 +29,15 @@ namespace Motely
                     .WithStake(stake)
                     .WithListSearch(new[] { seed })
                     .WithThreadCount(1);
-                    
+
                 var search = searchSettings.Start();
-                
+
                 // Wait for completion
                 while (search.Status == MotelySearchStatus.Running)
                 {
                     System.Threading.Thread.Sleep(10);
                 }
-                
+
                 search.Dispose();
             }
             catch (Exception ex)
@@ -85,7 +85,7 @@ namespace Motely
         public class AnteData(SeedAnalysisData.AnteData data)
         {
             private readonly SeedAnalysisData.AnteData _data = data;
-            
+
             public int Ante => _data.Ante;
             public MotelyBossBlind Boss => _data.Boss;
             public MotelyVoucher Voucher => _data.Voucher;
@@ -93,26 +93,26 @@ namespace Motely
             public List<ShopItem> ShopQueue => _data.ShopQueue.Select(s => new ShopItem(s)).ToList();
             public List<PackContent> Packs => _data.Packs.Select(p => new PackContent(p)).ToList();
         }
-        
+
         public class ShopItem(SeedAnalysisData.ShopItem data)
         {
             private readonly SeedAnalysisData.ShopItem _data = data;
-            
+
             public int Slot => _data.Slot;
             public MotelyItem Item => _data.Item;
             public string FormattedName => _data.FormattedName;
         }
-        
+
         public class PackContent(SeedAnalysisData.PackContent data)
         {
             private readonly SeedAnalysisData.PackContent _data = data;
-            
+
             public MotelyBoosterPack PackType => _data.PackType;
             public MotelyBoosterPackSize PackSize => _data.PackSize;
             public List<MotelyItem> Cards => _data.Cards;
             public string FormattedName => _data.FormattedName;
             public List<string> FormattedContents => _data.FormattedContents;
-            
+
             // Add the missing "Contents" property that the UI expects
             public List<MotelyItem> Contents => _data.Cards;
         }
@@ -151,7 +151,7 @@ namespace Motely
             public MotelyBoosterPack PackType { get; set; }
             public MotelyBoosterPackSize PackSize { get; set; }
             public List<MotelyItem> Cards { get; set; } = new();
-            
+
             public string FormattedName => FormatUtils.FormatPackName(PackType);
             public List<string> FormattedContents => Cards.ConvertAll(c => FormatUtils.FormatItem(c));
         }
@@ -180,7 +180,7 @@ namespace Motely
                 // Tags
                 var tagNames = ante.Tags.ConvertAll(t => FormatUtils.FormatTag(t));
                 Console.WriteLine($"Tags: {string.Join(", ", tagNames)}");
-                
+
                 // Shop Queue - match TheSoul format exactly: "Shop Queue: " on its own line, then numbered items
                 Console.WriteLine("Shop Queue: ");
                 foreach (var item in ante.ShopQueue)
@@ -188,13 +188,13 @@ namespace Motely
                     Console.WriteLine($"{item.Slot}) {item.FormattedName}");
                 }
                 Console.WriteLine();
-                
+
                 // Packs - match Immolate format exactly: "Pack Name - Card1, Card2, Card3"
                 Console.WriteLine("Packs: ");
                 foreach (var pack in ante.Packs)
                 {
                     // Format: "Pack Name - Card1, Card2, Card3"
-                    var contents = pack.FormattedContents.Count > 0 
+                    var contents = pack.FormattedContents.Count > 0
                         ? " - " + string.Join(", ", pack.FormattedContents)
                         : "";
                     Console.WriteLine($"{pack.FormattedName}{contents}");
@@ -212,7 +212,7 @@ namespace Motely
         public static string FormatItem(MotelyItem item)
         {
             var result = new StringBuilder();
-            
+
             // Add seal for playing cards (BEFORE edition)
             if (item.Seal != MotelyItemSeal.None)
             {
@@ -224,13 +224,13 @@ namespace Motely
             {
                 result.Append(item.Edition).Append(" ");
             }
-            
+
             // Add enhancement for playing cards
             if (item.Enhancement != MotelyItemEnhancement.None)
             {
                 result.Append(item.Enhancement).Append(" ");
             }
-            
+
             // Format based on type
             switch (item.TypeCategory)
             {
@@ -238,13 +238,13 @@ namespace Motely
                     var playingCard = (MotelyPlayingCard)(item.Value & Motely.ItemTypeMask & ~Motely.ItemTypeCategoryMask);
                     result.Append(FormatPlayingCard(playingCard));
                     break;
-                    
+
                 default:
                     // For all other types, just use the Type enum value and format it
                     result.Append(FormatDisplayName(item.Type.ToString()));
                     break;
             }
-            
+
             return result.ToString().Trim();
         }
 
@@ -477,7 +477,7 @@ namespace Motely
             {
                 // Create voucher state to track activated vouchers across antes
                 MotelyRunState voucherState = new();
-                
+
                 // Analyze each ante
                 for (int ante = 1; ante <= 8; ante++)
                 {
@@ -500,7 +500,7 @@ namespace Motely
 
                     // Voucher - get with state for proper progression
                     anteData.Voucher = ctx.GetAnteFirstVoucher(ante, voucherState);
-                    
+
                     // TEST: Activate ALL vouchers from ante 1 onwards
                     voucherState.ActivateVoucher(anteData.Voucher);
 
@@ -528,7 +528,7 @@ namespace Motely
                     // Balatro generates 2 base shop packs, then tags can add more up to 4 in ante 1 or 6 in other antes
                     var packStream = ctx.CreateBoosterPackStream(ante, isCached: false);
                     int maxPacks = ante == 1 ? 4 : 6;
-                    
+
                     // Get all packs up to the maximum
                     for (int i = 0; i < maxPacks; i++)
                     {
@@ -561,8 +561,8 @@ namespace Motely
                        voucher != MotelyVoucher.PlanetTycoon &&
                        voucher != MotelyVoucher.PlanetMerchant;
             }
-            
-    
+
+
             private static SeedAnalysisData.PackContent ExtractPackContents(
                 ref MotelySingleSearchContext ctx, int ante, MotelyBoosterPack pack, int packSlot,
                 ref MotelySingleTarotStream arcanaStream, ref bool arcanaStreamInit,

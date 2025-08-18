@@ -9,12 +9,12 @@ public enum MotelyTagType
     /// Any tag (either small blind or big blind)
     /// </summary>
     Any,
-    
+
     /// <summary>
     /// Small blind tag only
     /// </summary>
     SmallBlind,
-    
+
     /// <summary>
     /// Big blind tag only
     /// </summary>

@@ -10,21 +10,21 @@ public ref struct MotelySingleBossStream
     public MotelySinglePrngStream BossPrngStream;
     public Dictionary<MotelyBossBlind, int> BossesUsed;
     public int CurrentAnte;
-    
+
     public MotelySingleBossStream(MotelySinglePrngStream bossPrngStream, int ante)
     {
         BossPrngStream = bossPrngStream;
         CurrentAnte = ante;
         // Initialize bosses_used tracking like Balatro does
         BossesUsed = new Dictionary<MotelyBossBlind, int>();
-        
+
         // Initialize all bosses with 0 uses
         foreach (var boss in BossOrder)
         {
             BossesUsed[boss] = 0;
         }
     }
-    
+
     // Boss order from Balatro P_BLINDS - sorted by key names for consistency
     private static readonly MotelyBossBlind[] BossOrder = [
         MotelyBossBlind.AmberAcorn,
@@ -87,10 +87,10 @@ ref partial struct MotelySingleSearchContext
     {
         var ante = bossStream.CurrentAnte;
         var isShowdownAnte = (ante % 8 == 0);
-        
+
         // Build list of eligible bosses based on ante type
         var eligibleBosses = new List<MotelyBossBlind>();
-        
+
         if (isShowdownAnte)
         {
             // Showdown bosses for ante 8, 16, etc.
@@ -107,20 +107,20 @@ ref partial struct MotelySingleSearchContext
                 }
             }
         }
-        
+
         // Sort bosses alphabetically for consistent ordering
         eligibleBosses.Sort((a, b) => string.Compare(a.ToString(), b.ToString(), StringComparison.Ordinal));
-        
+
         // Simple random selection without usage tracking (like Immolate might do)
         int selectedIndex = GetNextRandomInt(ref bossStream.BossPrngStream, 0, eligibleBosses.Count - 1);
         var selectedBoss = eligibleBosses[selectedIndex];
-        
+
         // Increment ante for next call
         bossStream.CurrentAnte++;
-        
+
         return selectedBoss;
     }
-    
+
     // Simple method for getting boss for a specific ante without tracking state
     // This is what's currently used in OuijaJsonFilterDesc.cs
 #if !DEBUG
@@ -131,7 +131,7 @@ ref partial struct MotelySingleSearchContext
         // TEMPORARY: Hardcode boss sequences for test seeds to match Immolate
         // TODO: Fix the actual PRNG algorithm to match Immolate's implementation
         string seed = GetSeed();
-        
+
         if (seed == "UNITTEST")
         {
             // Expected bosses from Immolate for UNITTEST seed
@@ -164,10 +164,10 @@ ref partial struct MotelySingleSearchContext
                 _ => MotelyBossBlind.TheWindow
             };
         }
-        
+
         // For other seeds, use the normal algorithm
         var bossStream = CreateBossStream(1);
-        
+
         // Get bosses for each ante up to the requested one
         // This simulates the game progression
         MotelyBossBlind boss = MotelyBossBlind.TheArm;
@@ -176,7 +176,7 @@ ref partial struct MotelySingleSearchContext
             bossStream.CurrentAnte = i;
             boss = GetNextBoss(ref bossStream);
         }
-        
+
         return boss;
     }
 }
