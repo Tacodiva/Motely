@@ -14,7 +14,7 @@ public struct MotelySinglePrngStream(double state)
     public readonly bool IsInvalid => State < 0;
 }
 
-public ref struct MotelySingleResampleStream(MotelySinglePrngStream initialPrngStream, bool isCached)
+public struct MotelySingleResampleStream(MotelySinglePrngStream initialPrngStream, bool isCached)
 {
 
     public static MotelySingleResampleStream Invalid => new(MotelySinglePrngStream.Invalid, false);

@@ -6,41 +6,27 @@ namespace Motely.Tests;
 public sealed class AnalyzerUnitTests
 {
 
-    [Fact]
-    public async Task TestAnalyzer_UNITTEST_Seed()
+    [Theory]
+    [InlineData("1234567")]
+    [InlineData("12345678")]
+    [InlineData("ALEEB")]
+    [InlineData("ALEEBOOO")]
+    [InlineData("UNITTES")]
+    [InlineData("UNITTEST")]
+    [InlineData("KK1XD111", MotelyDeck.Ghost, MotelyStake.Black)]
+    public async Task TestAnalyzer(string seed, MotelyDeck deck = MotelyDeck.Red, MotelyStake stake = MotelyStake.White)
     {
-        // Arrange
-        string seed = "UNITTEST";
-
-
-
-        // Act
-        var actualOutput = GetAnalyzerOutput(seed);
+        string actualOutput = GetAnalyzerOutput(seed, deck, stake);
 
         // Assert using Verify - this will create a nice diff view
         await Verify(actualOutput)
-            .UseFileName($"analyzer_output_{seed}")
-            .DisableRequireUniquePrefix();
+            .UseFileName(seed)
+            .UseDirectory("seeds");
     }
 
-    [Fact]
-    public async Task TestAnalyzer_ALEEB_Seed()
+    private string GetAnalyzerOutput(string seed, MotelyDeck deck = MotelyDeck.Red, MotelyStake stake = MotelyStake.White)
     {
-        // Arrange
-        string seed = "ALEEB";
-
-        // Act
-        var actualOutput = GetAnalyzerOutput(seed);
-
-        // Assert using Verify - this will create a nice diff view
-        await Verify(actualOutput)
-            .UseFileName($"analyzer_output_{seed}")
-            .DisableRequireUniquePrefix();
-    }
-
-    private string GetAnalyzerOutput(string seed)
-    {
-        return MotelySeedAnalyzer.Analyze(new(seed, MotelyDeck.Red, MotelyStake.White)).ToString();
+        return MotelySeedAnalyzer.Analyze(new(seed, deck, stake)).ToString();
     }
 
     // This method is now only used by other tests that don't use Verify yet

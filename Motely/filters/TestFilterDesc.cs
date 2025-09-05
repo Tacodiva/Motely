@@ -41,8 +41,13 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
             {
                 Console.WriteLine($"\n{searchContext.GetSeed()}\n");
 
-                MotelySingleSpectralStream stream = searchContext.CreateSpectralPackSpectralStream(6);
-                Console.WriteLine(searchContext.GetNextSpectral(ref stream));
+
+                // for (int i = 0; i < 30; i++) 
+
+                // for (int i = 0; i < 5; i++)
+                // {
+                //     Console.WriteLine(searchContext.GetNextPrngState(ref stream));
+                // }
 
                 // MotelySinglePrngStream blackHoleStream = searchContext.CreatePrngStream(MotelyPrngKeys.SpectralSoulBlackHole + MotelyPrngKeys.Spectral + 6);
 

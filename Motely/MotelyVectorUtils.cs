@@ -39,7 +39,62 @@ public unsafe static class MotelyVectorUtils
             return Avx2.ShiftLeftLogicalVariable(value, shiftCount.AsUInt32());
         }
 
-        throw new PlatformNotSupportedException();
+        int* temp = stackalloc int[Vector256<int>.Count];
+
+        temp[0] = value[0] & shiftCount[0];
+        temp[1] = value[1] & shiftCount[1];
+        temp[2] = value[2] & shiftCount[2];
+        temp[3] = value[3] & shiftCount[3];
+        temp[4] = value[4] & shiftCount[4];
+        temp[5] = value[5] & shiftCount[5];
+        temp[6] = value[6] & shiftCount[6];
+        temp[7] = value[7] & shiftCount[7];
+
+        return *(Vector256<int>*)temp;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector512<long> ShiftLeft(in Vector512<long> value, in Vector512<long> shiftCount)
+    {
+        if (AdvSimd.IsSupported)
+        {
+            return Vector512.Create(
+                Vector256.Create(
+                    AdvSimd.ShiftLogical(value.GetLower().GetLower(), shiftCount.GetLower().GetLower()),
+                    AdvSimd.ShiftLogical(value.GetLower().GetUpper(), shiftCount.GetLower().GetUpper())
+                ),
+                Vector256.Create(
+                    AdvSimd.ShiftLogical(value.GetUpper().GetLower(), shiftCount.GetUpper().GetLower()),
+                    AdvSimd.ShiftLogical(value.GetUpper().GetUpper(), shiftCount.GetUpper().GetUpper())
+                )
+            );
+        }
+
+        if (Avx512F.IsSupported)
+        {
+            return Avx512F.ShiftLeftLogicalVariable(value, shiftCount.AsUInt64());
+        }
+
+        if (Avx2.IsSupported)
+        {
+            return Vector512.Create(
+                Avx2.ShiftLeftLogicalVariable(value.GetLower(), shiftCount.GetLower().AsUInt64()),
+                Avx2.ShiftLeftLogicalVariable(value.GetUpper(), shiftCount.GetUpper().AsUInt64())
+            );
+        }
+
+        long* temp = stackalloc long[Vector512<long>.Count];
+
+        temp[0] = value[0] & shiftCount[0];
+        temp[1] = value[1] & shiftCount[1];
+        temp[2] = value[2] & shiftCount[2];
+        temp[3] = value[3] & shiftCount[3];
+        temp[4] = value[4] & shiftCount[4];
+        temp[5] = value[5] & shiftCount[5];
+        temp[6] = value[6] & shiftCount[6];
+        temp[7] = value[7] & shiftCount[7];
+
+        return *(Vector512<long>*)temp;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

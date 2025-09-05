@@ -38,4 +38,10 @@ public class Motely
     public const int EternalStickerOffset = 30;
     public const int RentalStickerOffset = 29;
 
+    public const int BossTypeOffset = 31;
+    public const int BossTypeMask = 0b1 << BossTypeOffset;
+    public const int BossRequiredAnteOffset = 28;
+    public const int BossRequiredAnteMask = 0b111 << BossRequiredAnteOffset;
+
+
 }

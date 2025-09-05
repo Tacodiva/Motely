@@ -1,5 +1,6 @@
 
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
@@ -295,6 +296,86 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
         return partialHash;
     }
 
+// #if !DEBUG
+//     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// #endif
+//     private static void Fract(in Vector512<double> x)
+//     {
+//         Vector512<ulong> xInt = x.AsUInt64();
+
+
+//         const ulong DblExpo = 0x7FF0000000000000;
+//         const ulong DblMant = 0x000FFFFFFFFFFFFF;
+
+//         const int DblMantSZ = 52;
+
+//         const int DblExpoBias = 1023;
+
+//         Vector512<ulong> expo = (xInt & Vector512.Create(DblExpo)) >> DblMantSZ;
+
+//         Vector512<ulong> edgecaseXMask = Vector512.LessThan(expo, Vector512.Create((ulong)DblExpoBias));
+
+//         Vector512<ulong> expoBiased = expo - Vector512.Create((ulong)DblExpoBias);
+
+//         Vector512<ulong> edgecase0Mask = Vector512.GreaterThan(expoBiased, Vector512.Create((ulong)DblMantSZ));
+
+//         Vector512<ulong> mant = xInt & Vector512.Create(DblMant);
+//         Vector512<ulong> fractMant = mant & (
+//             MotelyVectorUtils.ShiftLeft(
+//                 Vector512.Create(1L),
+//                 Vector512.Create(Vector512.Create((ulong)DblMantSZ) - expoBiased).AsInt64()
+//             ).AsUInt64() - Vector512<ulong>.One
+//         );
+
+//         edgecase0Mask |= Vector512.Equals(fractMant, Vector512.Create(0UL));
+        
+
+
+//         if (expo < DblExpoBias) return x;
+
+//         // const int DblExpoSZ = 11;
+//         // if (expo == ((1 << DblExpoSZ) - 1)) return double.NaN;
+
+//         ulong expoBiased = expo - DblExpoBias;
+
+//         if (expoBiased > DblMantSZ) return 0;
+
+//         ulong mant = xInt & DblMant;
+//         ulong fractMant = mant & ((1ul << (int)(DblMantSZ - expoBiased)) - 1);
+
+//         if (fractMant == 0) return 0;
+
+//         int fractLzcnt = BitOperations.LeadingZeroCount(fractMant) - (64 - DblMantSZ);
+//         ulong resExpo = (expo - (ulong)fractLzcnt - 1) << DblMantSZ;
+//         ulong resMant = (fractMant << (fractLzcnt + 1)) & DblMant;
+
+//         ulong res = resExpo | resMant;
+
+//         return Unsafe.As<ulong, double>(ref res);
+//     }
+
+    private static readonly double InvPrec = Math.Pow(10.0, 13);
+    private static readonly double TwoInvPrec = Math.Pow(2.0, 13);
+    private static readonly double FiveInvPrec = Math.Pow(5.0, 13);
+
+    // #if !DEBUG
+    //     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // #endif
+    //     private static double Round13(double x)
+    //     {
+    //         double normalCase = Math.Round(x * InvPrec, MidpointRounding.AwayFromZero) / InvPrec;
+
+    //         if (normalCase == Math.Round(Math.BitDecrement(x) * InvPrec, MidpointRounding.AwayFromZero) / InvPrec)
+    //             return normalCase;
+
+    //         double truncated = Fract(x * TwoInvPrec) * FiveInvPrec;
+
+    //         if (Fract(truncated) >= 0.5)
+    //             return (Math.Floor(x * InvPrec) + 1) / InvPrec;
+
+    //         return Math.Floor(x * InvPrec) / InvPrec;
+    //     }
+
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -308,7 +389,7 @@ public readonly unsafe ref partial struct MotelyVectorSearchContext
 
         state = Vector512.Multiply(state, 10000000000000);
 
-        state = Vector512.Round(state);
+        state = Vector512.Round(state, MidpointRounding.AwayFromZero);
         state = Vector512.Divide(state, 10000000000000);
 
         return state;

@@ -11,6 +11,20 @@ internal static class FormatUtils
     {
         var result = new StringBuilder();
 
+        // Add stickers (Eternal, Perishable, Rental) FIRST
+        if (item.IsEternal)
+        {
+            result.Append("Eternal ");
+        }
+        if (item.IsPerishable)
+        {
+            result.Append("Perishable ");
+        }
+        if (item.IsRental)
+        {
+            result.Append("Rental ");
+        }
+
         // Add seal for playing cards (BEFORE edition)
         if (item.Seal != MotelyItemSeal.None)
         {

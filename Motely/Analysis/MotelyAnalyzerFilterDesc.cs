@@ -43,6 +43,7 @@ public sealed class MotelyAnalyzerFilterDesc() : IMotelySeedFilterDesc<MotelyAna
         {
             // Create voucher state to track activated vouchers across antes
             MotelyRunState voucherState = new();
+            MotelySingleBossStream bossStream = ctx.CreateBossStream();
 
             List<MotelyAnteAnalysis> antes = [];
 
@@ -60,7 +61,7 @@ public sealed class MotelyAnalyzerFilterDesc() : IMotelySeedFilterDesc<MotelyAna
                 };
 
                 // Boss
-                MotelyBossBlind boss = ctx.GetBossForAnte(ante);
+                MotelyBossBlind boss = ctx.GetBossForAnte(ref bossStream, ante, ref voucherState);
 
                 // Voucher - get with state for proper progression
                 MotelyVoucher voucher = ctx.GetAnteFirstVoucher(ante, voucherState);

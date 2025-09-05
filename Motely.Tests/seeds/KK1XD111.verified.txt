@@ -1,0 +1,475 @@
+﻿==ANTE 1==
+Boss: The Pillar
+Voucher: Tarot Merchant
+Tags: Economy Tag, Holographic Tag
+Shop Queue: 
+1) Eternal Supernova
+2) Eternal Erosion
+3) Campfire
+4) Golden Ticket
+5) Riff-raff
+6) Hallucination
+7) Grim
+8) Eternal Jolly Joker
+9) Eternal Chaos the Clown
+10) Photograph
+11) Ancient Joker
+12) Mercury
+13) Ceres
+14) Eternal Steel Joker
+15) Odd Todd
+
+Packs: 
+Buffoon Pack - Eternal Reserved Parking, Crazy Joker
+Arcana Pack - The Hanged Man, The Fool, The Devil
+Jumbo Celestial Pack - Ceres, Venus, Uranus, Jupiter, Saturn
+Jumbo Celestial Pack - Venus, Uranus, Pluto, Saturn, Eris
+
+==ANTE 2==
+Boss: The Wheel
+Voucher: Crystal Ball
+Tags: Meteor Tag, Meteor Tag
+Shop Queue: 
+1) The World
+2) To the Moon
+3) Foil Zany Joker
+4) Marble Joker
+5) Neptune
+6) Steel Joker
+7) Half Joker
+8) Deja Vu
+9) Planet X
+10) The Moon
+11) Pluto
+12) Vampire
+13) Talisman
+14) Eternal Foil Scary Face
+15) Eternal Banner
+16) Invisible Joker
+17) Ceres
+18) Venus
+19) Runner
+20) Jolly Joker
+21) Greedy Joker
+22) Eternal Golden Ticket
+23) Temperance
+24) Joker
+25) Blue Joker
+26) Hit the Road
+27) Eternal Crazy Joker
+28) Eternal Hologram
+29) Eternal Blue Joker
+30) Mercury
+31) Strength
+32) Credit Card
+33) Sly Joker
+34) Eris
+35) Eternal Splash
+36) Eternal Wily Joker
+37) Eternal Photograph
+38) Foil Scholar
+39) Familiar
+40) Eternal Hanging Chad
+41) Ice Cream
+42) Crazy Joker
+43) Mad Joker
+44) Smiley Face
+45) Eternal Foil Raised Fist
+46) Sly Joker
+47) The Hanged Man
+48) Pluto
+49) The Fool
+50) Juggler
+
+Packs: 
+Arcana Pack - The Soul, The Wheel of Fortune, The Tower
+Jumbo Celestial Pack - Venus, Mercury, Jupiter, Uranus, Earth
+Standard Pack - 9 of Spades, 4 of Hearts, Glass King of Diamonds
+Jumbo Celestial Pack - Mercury, Earth, Mars, Planet X, Saturn
+Standard Pack - 5 of Clubs, 6 of Spades, 2 of Hearts
+Jumbo Arcana Pack - The Devil, The Hanged Man, The Wheel of Fortune, The Emperor, The Hierophant
+
+==ANTE 3==
+Boss: The Flint
+Voucher: Telescope
+Tags: Boss Tag, Ethereal Tag
+Shop Queue: 
+1) Mad Joker
+2) Onyx Agate
+3) Eternal Banner
+4) The World
+5) The Magician
+6) Golden Joker
+7) Crazy Joker
+8) Red Card
+9) Hallucination
+10) Eternal The Duo
+11) Reserved Parking
+12) The Tower
+13) Eternal Stone Joker
+14) Hex
+15) Mad Joker
+16) Sly Joker
+17) Drunkard
+18) Oops! All 6s
+19) The Family
+20) Uranus
+21) Eternal Juggler
+22) Seance
+23) Blue Joker
+24) Even Steven
+25) Grim
+26) Eternal Sly Joker
+27) Eternal Business Card
+28) Immolate
+29) Venus
+30) Photograph
+31) Earth
+32) Grim
+33) Misprint
+34) Luchador
+35) Temperance
+36) Neptune
+37) The Hanged Man
+38) Cryptid
+39) Foil Burglar
+40) Ice Cream
+41) Foil Sly Joker
+42) Sly Joker
+43) Merry Andy
+44) Hanging Chad
+45) Eternal Lusty Joker
+46) Crazy Joker
+47) Hanging Chad
+48) Luchador
+49) Eternal Smeared Joker
+50) Ectoplasm
+
+Packs: 
+Buffoon Pack - Eternal Blueprint, Mystic Summit
+Standard Pack - Glass Jack of Diamonds, Gold Seal Mult 9 of Spades, 2 of Clubs
+Standard Pack - 7 of Clubs, Queen of Hearts, Lucky 5 of Diamonds
+Standard Pack - Mult 2 of Hearts, 5 of Spades, 5 of Clubs
+Standard Pack - Red Seal Jack of Hearts, 7 of Spades, Foil 2 of Diamonds
+Standard Pack - Lucky King of Diamonds, Foil Glass 4 of Spades, 4 of Spades
+
+==ANTE 4==
+Boss: The Mouth
+Voucher: Tarot Tycoon
+Tags: Holographic Tag, Investment Tag
+Shop Queue: 
+1) Zany Joker
+2) Splash
+3) Business Card
+4) Eternal Holographic Superposition
+5) Neptune
+6) Troubadour
+7) Lusty Joker
+8) Devious Joker
+9) Erosion
+10) The Hanged Man
+11) The Wheel of Fortune
+12) Pluto
+13) Superposition
+14) Luchador
+15) Eternal Mad Joker
+16) Eternal Drunkard
+17) The Emperor
+18) The Hermit
+19) Saturn
+20) Eternal Crazy Joker
+21) Abstract Joker
+22) Eternal 8 Ball
+23) The Tower
+24) Ancient Joker
+25) Reserved Parking
+26) Pluto
+27) Smiley Face
+28) Justice
+29) Eternal Raised Fist
+30) Ectoplasm
+31) Dusk
+32) Cryptid
+33) Photograph
+34) The World
+35) Eternal Riff-raff
+36) Venus
+37) Walkie Talkie
+38) Eternal Splash
+39) Square Joker
+40) Eternal Sock and Buskin
+41) Trading Card
+42) Crafty Joker
+43) Uranus
+44) Neptune
+45) The Chariot
+46) Mail In Rebate
+47) Saturn
+48) Hex
+49) Eternal Holographic The Family
+50) Joker
+
+Packs: 
+Celestial Pack - Eris, Mars, Pluto
+Buffoon Pack - Gros Michel, Clever Joker
+Celestial Pack - Ceres, Mercury, Venus
+Mega Arcana Pack - Judgement, The Hierophant, Strength, The World, The Magician
+Jumbo Standard Pack - Mult 2 of Clubs, Ace of Hearts, Red Seal Ace of Diamonds, Blue Seal 6 of Diamonds, 3 of Spades
+Arcana Pack - Temperance, The Lovers, The Star
+
+==ANTE 5==
+Boss: The Tooth
+Voucher: Observatory
+Tags: Investment Tag, Speed Tag
+Shop Queue: 
+1) Deja Vu
+2) Eternal Photograph
+3) Eternal Green Joker
+4) Bootstraps
+5) Diet Cola
+6) The Star
+7) Eternal Mail In Rebate
+8) Ceres
+9) The Wheel of Fortune
+10) The Hierophant
+11) Crazy Joker
+12) Turtle Bean
+13) Saturn
+14) Fibonacci
+15) Eternal Fortune Teller
+16) Ouija
+17) Ouija
+18) Droll Joker
+19) Faceless Joker
+20) The Empress
+21) Venus
+22) Campfire
+23) Eternal Gluttonous Joker
+24) Onyx Agate
+25) Banner
+26) Mad Joker
+27) Saturn
+28) Sigil
+29) Mad Joker
+30) Eternal To the Moon
+31) Eternal Wrathful Joker
+32) Eternal The Duo
+33) Ice Cream
+34) Blue Joker
+35) Mercury
+36) Ice Cream
+37) Cavendish
+38) Popcorn
+39) The Devil
+40) Eternal Scary Face
+41) Banner
+42) Earth
+43) Sixth Sense
+44) The Hierophant
+45) Eternal Odd Todd
+46) Mars
+47) Ectoplasm
+48) Vampire
+49) Faceless Joker
+50) Scholar
+
+Packs: 
+Mega Celestial Pack - Earth, Saturn, Mercury, Mars, Ceres
+Celestial Pack - Earth, Planet X, Venus
+Standard Pack - Gold 4 of Hearts, 4 of Clubs, Blue Seal Bonus 9 of Hearts
+Standard Pack - 3 of Hearts, 9 of Diamonds, Stone 8 of Clubs
+Mega Standard Pack - Steel 7 of Clubs, 2 of Diamonds, King of Diamonds, Gold 2 of Spades, Stone Queen of Diamonds
+Standard Pack - Bonus 10 of Diamonds, 2 of Hearts, Jack of Hearts
+
+==ANTE 6==
+Boss: The Ox
+Voucher: Reroll Surplus
+Tags: Foil Tag, Standard Tag
+Shop Queue: 
+1) Wraith
+2) Burnt Joker
+3) Ouija
+4) Egg
+5) Eternal Business Card
+6) Gros Michel
+7) Ceres
+8) Foil Spare Trousers
+9) Medium
+10) Neptune
+11) Gros Michel
+12) Ouija
+13) DNA
+14) Crazy Joker
+15) Lusty Joker
+16) Raised Fist
+17) Eternal Greedy Joker
+18) Eternal Zany Joker
+19) Eris
+20) Eternal Devious Joker
+21) The Emperor
+22) Trading Card
+23) Planet X
+24) Neptune
+25) Zany Joker
+26) Uranus
+27) The Empress
+28) Negative Joker Stencil
+29) Popcorn
+30) The World
+31) Eternal Cartomancer
+32) Eternal Castle
+33) Riff-raff
+34) Blue Joker
+35) Eternal Ride the Bus
+36) Red Card
+37) Madness
+38) Eternal Wee Joker
+39) The High Priestess
+40) Eternal Square Joker
+41) Blackboard
+42) Invisible Joker
+43) Runner
+44) Golden Ticket
+45) Eris
+46) Hanging Chad
+47) Eternal Gluttonous Joker
+48) Venus
+49) The Wheel of Fortune
+50) Flash Card
+
+Packs: 
+Mega Celestial Pack - Jupiter, Uranus, Mars, Eris, Ceres
+Jumbo Standard Pack - Blue Seal 3 of Clubs, 10 of Spades, 6 of Spades, 10 of Hearts, 8 of Hearts
+Mega Standard Pack - Wild 8 of Spades, 3 of Spades, Bonus 6 of Hearts, King of Clubs, 3 of Clubs
+Arcana Pack - The Magician, The Hierophant, The Empress
+Standard Pack - Mult 10 of Hearts, 2 of Spades, Steel 7 of Diamonds
+Jumbo Buffoon Pack - Eternal To Do List, Greedy Joker, Vagabond, Negative Fortune Teller
+
+==ANTE 7==
+Boss: The Club
+Voucher: Director's Cut
+Tags: Boss Tag, Foil Tag
+Shop Queue: 
+1) Wily Joker
+2) Flash Card
+3) Wrathful Joker
+4) Midas Mask
+5) Hack
+6) The Hierophant
+7) Jupiter
+8) The Devil
+9) Egg
+10) Holographic Drunkard
+11) Rocket
+12) Abstract Joker
+13) Droll Joker
+14) Justice
+15) Crazy Joker
+16) Eternal Red Card
+17) Eternal Swashbuckler
+18) Mercury
+19) Jupiter
+20) Eternal Raised Fist
+21) Saturn
+22) Eternal Hiker
+23) Eternal Bull
+24) Judgement
+25) The Hierophant
+26) Abstract Joker
+27) The Trio
+28) The Sun
+29) Mercury
+30) Spare Trousers
+31) Golden Ticket
+32) Hallucination
+33) Saturn
+34) Green Joker
+35) Smiley Face
+36) The Devil
+37) Eternal Wee Joker
+38) Joker Stencil
+39) Eternal Cartomancer
+40) Card Sharp
+41) Credit Card
+42) Odd Todd
+43) The Devil
+44) Diet Cola
+45) Juggler
+46) Stone Joker
+47) Justice
+48) Chaos the Clown
+49) Foil Steel Joker
+50) Smeared Joker
+
+Packs: 
+Jumbo Arcana Pack - The Tower, Temperance, The Fool, The Lovers, The Hermit
+Celestial Pack - Pluto, Venus, Mercury
+Buffoon Pack - Eternal Golden Ticket, Ride the Bus
+Celestial Pack - Neptune, Earth, Pluto
+Mega Standard Pack - King of Hearts, Blue Seal 7 of Clubs, Jack of Spades, Queen of Clubs, Jack of Clubs
+Mega Buffoon Pack - Delayed Gratification, Zany Joker, Mr. Bones, Eternal Swashbuckler
+
+==ANTE 8==
+Boss: Violet Vessel
+Voucher: Planet Merchant
+Tags: Negative Tag, Economy Tag
+Shop Queue: 
+1) Chaos the Clown
+2) Eternal Fibonacci
+3) Hit the Road
+4) Incantation
+5) Smiley Face
+6) Constellation
+7) Foil Spare Trousers
+8) Eternal Gluttonous Joker
+9) Chaos the Clown
+10) Cavendish
+11) Gros Michel
+12) The Sun
+13) Eternal Photograph
+14) Square Joker
+15) Flower Pot
+16) The Hermit
+17) Supernova
+18) Misprint
+19) Cartomancer
+20) Juggler
+21) The Lovers
+22) Eternal Walkie Talkie
+23) Justice
+24) Blue Joker
+25) Eternal Bloodstone
+26) Invisible Joker
+27) Troubadour
+28) Square Joker
+29) Reserved Parking
+30) The High Priestess
+31) Smiley Face
+32) Arrowhead
+33) Cryptid
+34) Scary Face
+35) The Devil
+36) Trance
+37) Ouija
+38) Gros Michel
+39) Joker Stencil
+40) Eternal Egg
+41) Blue Joker
+42) The Wheel of Fortune
+43) Foil Ramen
+44) Grim
+45) Eternal Card Sharp
+46) Abstract Joker
+47) Eternal Even Steven
+48) Ceres
+49) Dusk
+50) Gluttonous Joker
+
+Packs: 
+Celestial Pack - Planet X, Jupiter, Earth
+Standard Pack - Gold Seal 6 of Clubs, Gold Seal 5 of Diamonds, Steel Ace of Spades
+Jumbo Spectral Pack - Ankh, Medium, Ouija, Grim
+Arcana Pack - The Sun, The Emperor, The Lovers
+Jumbo Standard Pack - Ace of Diamonds, Red Seal 6 of Diamonds, 6 of Spades, Queen of Hearts, Glass 2 of Diamonds
+Jumbo Arcana Pack - The Chariot, The Sun, The Empress, The Moon, The Hermit
+
