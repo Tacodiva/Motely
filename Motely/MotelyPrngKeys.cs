@@ -48,8 +48,25 @@ public static class MotelyPrngKeys
     
     public const string ShopItemType = "cdt";
     public const string ShopItemSource = "sho";
-    public const string ShopJokerEternalPerishableSource = "etperpoll";
-    public const string ShopJokerRentalSource = "ssjr";
+    public const string DefaultJokerEternalPerishableSource = "etperpoll";
+    public const string DefaultJokerRentalSource = "ssjr";
+
+    public const string JokerMisprint = "misprint";
+    public const string JokerCavendish = "cavendish";
+    public const string JokerGrosMichel = "gros_michel";
+    public const string JokerRiffRaff = "rif";
+
+    public const string CardLuckyMoney = "lucky_money";
+    public const string CardLuckyMult = "lucky_mult";
+
+    public const string TarotWheelOfFortune = "wheel_of_fortune";
+    public const string TarotEmperor = "emp";
+    public const string TarotJudgement = "jud";
+
+    public const string TagRare = "rta";
+    public const string TagUncommon = "uta";
+
+    public const string SealPurple = "8ba";
 
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -169,8 +169,8 @@ public ref struct MotelyFilterCreationContext
 
         CacheJokerStream(ante,
             MotelyPrngKeys.ShopItemSource,
-            MotelyPrngKeys.ShopJokerEternalPerishableSource,
-            MotelyPrngKeys.ShopJokerRentalSource,
+            MotelyPrngKeys.DefaultJokerEternalPerishableSource,
+            MotelyPrngKeys.DefaultJokerRentalSource,
             flags, force
         );
 
@@ -200,8 +200,8 @@ public ref struct MotelyFilterCreationContext
     {
         CacheFixedRarityJokerStream(ante,
             MotelyPrngKeys.JokerSoulSource,
-            MotelyPrngKeys.ShopJokerEternalPerishableSource,
-            MotelyPrngKeys.ShopJokerRentalSource,
+            MotelyPrngKeys.DefaultJokerEternalPerishableSource,
+            MotelyPrngKeys.DefaultJokerRentalSource,
             MotelyJokerRarity.Legendary,
             flags, force
         );

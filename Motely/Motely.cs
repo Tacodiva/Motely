@@ -43,5 +43,14 @@ public class Motely
     public const int BossRequiredAnteOffset = 28;
     public const int BossRequiredAnteMask = 0b111 << BossRequiredAnteOffset;
 
+    public const int JokerMisprintMin = 0;
+    public const int JokerMisprintMax = 23;
+    public const double JokerCavendishChance = 1000;
+    public const double JokerGrosMichelChance = 6;
+
+    public const double EnhancementLuckyMoneyChance = 15;
+    public const double EnhancementLuckyMultChance = 5;
+
+    public const double TarrotWheelChance = 4;
 
 }

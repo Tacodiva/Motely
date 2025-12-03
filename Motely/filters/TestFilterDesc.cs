@@ -39,7 +39,13 @@ public struct TestFilterDesc() : IMotelySeedFilterDesc<TestFilterDesc.TestFilter
 
             return searchContext.SearchIndividualSeeds((ref MotelySingleSearchContext searchContext) =>
             {
-                Console.WriteLine($"\n{searchContext.GetSeed()}\n");
+                // Console.WriteLine($"\n{searchContext.GetSeed()}\n");
+
+                var stream = searchContext.CreatePurpleSealTarotStream(1);
+
+                for (int i = 0; i < 5; i++) {
+                    Console.WriteLine(searchContext.GetNextTarot(ref stream));
+                }
 
 
                 // for (int i = 0; i < 30; i++) 

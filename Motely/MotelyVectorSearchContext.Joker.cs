@@ -48,8 +48,18 @@ unsafe partial struct MotelyVectorSearchContext
     {
         return CreateJokerStream(
             MotelyPrngKeys.ShopItemSource,
-            MotelyPrngKeys.ShopJokerEternalPerishableSource,
-            MotelyPrngKeys.ShopJokerRentalSource,
+            MotelyPrngKeys.DefaultJokerEternalPerishableSource,
+            MotelyPrngKeys.DefaultJokerRentalSource,
+            ante, flags, isCached
+        );
+    }
+
+    public MotelyVectorJokerStream CreateJudgementJokerStream(int ante, MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default, bool isCached = false)
+    {
+        return CreateJokerStream(
+            MotelyPrngKeys.TarotJudgement,
+            MotelyPrngKeys.DefaultJokerEternalPerishableSource,
+            MotelyPrngKeys.DefaultJokerRentalSource,
             ante, flags, isCached
         );
     }
@@ -84,9 +94,39 @@ unsafe partial struct MotelyVectorSearchContext
     {
         return CreateJokerFixedRarityStream(
             MotelyPrngKeys.JokerSoulSource,
-            MotelyPrngKeys.ShopJokerEternalPerishableSource,
-            MotelyPrngKeys.ShopJokerRentalSource,
+            MotelyPrngKeys.DefaultJokerEternalPerishableSource,
+            MotelyPrngKeys.DefaultJokerRentalSource,
             ante, flags, MotelyJokerRarity.Legendary, isCached
+        );
+    }
+
+    public MotelyVectorJokerFixedRarityStream CreateRareTagJokerStream(int ante, MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default, bool isCached = false)
+    {
+        return CreateJokerFixedRarityStream(
+            MotelyPrngKeys.TagRare,
+            MotelyPrngKeys.DefaultJokerEternalPerishableSource,
+            MotelyPrngKeys.DefaultJokerRentalSource,
+            ante, flags, MotelyJokerRarity.Rare, isCached
+        );
+    }
+
+    public MotelyVectorJokerFixedRarityStream CreateUncommonTagJokerStream(int ante, MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default, bool isCached = false)
+    {
+        return CreateJokerFixedRarityStream(
+            MotelyPrngKeys.TagUncommon,
+            MotelyPrngKeys.DefaultJokerEternalPerishableSource,
+            MotelyPrngKeys.DefaultJokerRentalSource,
+            ante, flags, MotelyJokerRarity.Uncommon, isCached
+        );
+    }
+
+    public MotelyVectorJokerFixedRarityStream CreateRiffRaffJokerStream(int ante, MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default, bool isCached = false)
+    {
+        return CreateJokerFixedRarityStream(
+            MotelyPrngKeys.JokerRiffRaff,
+            MotelyPrngKeys.DefaultJokerEternalPerishableSource,
+            MotelyPrngKeys.DefaultJokerRentalSource,
+            ante, flags, MotelyJokerRarity.Common, isCached
         );
     }
 
