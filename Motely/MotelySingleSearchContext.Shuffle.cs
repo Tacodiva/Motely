@@ -1,4 +1,6 @@
 
+using System;
+
 namespace Motely;
 
 unsafe ref partial struct MotelySingleSearchContext

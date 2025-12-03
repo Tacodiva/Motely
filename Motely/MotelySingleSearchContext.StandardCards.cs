@@ -1,4 +1,6 @@
 
+using System;
+
 namespace Motely;
 
 public ref struct MotelySingleStandardCardStream

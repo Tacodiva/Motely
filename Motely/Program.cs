@@ -1,8 +1,6 @@
 ﻿
 using Motely;
 
-
-
 // IMotelySearch search = new MotelySearchSettings<FilledSoulFilterDesc.SoulFilter>(new FilledSoulFilterDesc())
 IMotelySearch search = new MotelySearchSettings<TestFilterDesc.TestFilter>(new TestFilterDesc())
     // IMotelySearch search = new MotelySearchSettings<LuckCardFilterDesc.LuckyCardFilter>(new LuckCardFilterDesc())
@@ -17,7 +15,7 @@ IMotelySearch search = new MotelySearchSettings<TestFilterDesc.TestFilter>(new T
     // .WithAdditionalFilter(new LuckyCardFilterDesc())
     // .WithAdditionalFilter(new PerkeoObservatoryFilterDesc())
     // .WithListSearch(["TACO", "DIVA", "7729", "AAAA", "BBBB", "CCCC", "DDDD", "EEEE"])
-    .WithListSearch(["ALEEB"])
+    .WithListSearch(["87DQOC3C"])
     // .WithListSearch(["TIQR1111"])
     // .WithStake(MotelyStake.Black)
     .Start();
