@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motely", "Motely\Motely.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motely.Tests", "Motely.Tests\Motely.Tests.csproj", "{59C34E24-F58D-46B8-BE4C-E7C2CA264125}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Motely.Run", "Motely.Run\Motely.Run.csproj", "{EB4B1016-AA31-4DD0-9945-0ED868EA288B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{59C34E24-F58D-46B8-BE4C-E7C2CA264125}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59C34E24-F58D-46B8-BE4C-E7C2CA264125}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59C34E24-F58D-46B8-BE4C-E7C2CA264125}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB4B1016-AA31-4DD0-9945-0ED868EA288B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB4B1016-AA31-4DD0-9945-0ED868EA288B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB4B1016-AA31-4DD0-9945-0ED868EA288B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB4B1016-AA31-4DD0-9945-0ED868EA288B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
