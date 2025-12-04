@@ -135,6 +135,8 @@ public readonly unsafe ref partial struct MotelySingleSearchContext
 #endif
     private static double Fract(double x)
     {
+        if (double.IsNaN(x)) return x;
+
         ref ulong xInt = ref Unsafe.As<double, ulong>(ref x);
 
         const ulong DblExpo = 0x7FF0000000000000;
@@ -149,7 +151,7 @@ public readonly unsafe ref partial struct MotelySingleSearchContext
         if (expo < DblExpoBias) return x;
 
         // We don't have to worry about this edge case
-        
+
         // const int DblExpoSZ = 11;
         // if (expo == ((1 << DblExpoSZ) - 1)) return double.NaN;
 

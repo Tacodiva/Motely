@@ -2,24 +2,24 @@ using System.Runtime.Intrinsics;
 
 namespace Motely;
 
-public struct FilledSoulFilterDesc() : IMotelySeedFilterDesc<FilledSoulFilterDesc.SoulFilter>
+public struct FilledSoulFilterDesc() : IMotelySeedFilterDesc<FilledSoulFilterDesc.FilterStruct>
 {
 
     public const int MinAnte = 5;
     public const int MaxAnte = 9;
     public const int SoulsInARow = 5;
 
-    public SoulFilter CreateFilter(ref MotelyFilterCreationContext ctx)
+    public FilterStruct CreateFilter(ref MotelyFilterCreationContext ctx)
     {
         for (int ante = MinAnte; ante <= MaxAnte; ante++)
         {
             ctx.CachePseudoHash(MotelyPrngKeys.TerrotSoul + MotelyPrngKeys.Tarot + ante);
         }
 
-        return new SoulFilter();
+        return new FilterStruct();
     }
 
-    public struct SoulFilter() : IMotelySeedFilter
+    public struct FilterStruct() : IMotelySeedFilter
     {
 
         public VectorMask Filter(ref MotelyVectorSearchContext searchContext)

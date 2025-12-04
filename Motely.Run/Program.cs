@@ -2,7 +2,9 @@
 using Motely;
 
 // IMotelySearch search = new MotelySearchSettings<NegativePerkeoFilterDescOld.FilterStruct>(new NegativePerkeoFilterDescOld())
-IMotelySearch search = new MotelySearchSettings<NegativePerkeoFilterDescNew.FilterStruct>(new NegativePerkeoFilterDescNew())
+// IMotelySearch search = new MotelySearchSettings<NegativePerkeoFilterDescNew.FilterStruct>(new NegativePerkeoFilterDescNew())
+IMotelySearch search = new MotelySearchSettings<ErraticFinderDesc.FilterStruct>(new ErraticFinderDesc())
+// IMotelySearch search = new MotelySearchSettings<TestFilterDesc.TestFilter>(new TestFilterDesc())
 // IMotelySearch search = new MotelySearchSettings<FilledSoulFilterDesc.SoulFilter>(new FilledSoulFilterDesc())
     // IMotelySearch search = new MotelySearchSettings<LuckCardFilterDesc.LuckyCardFilter>(new LuckCardFilterDesc())
     // IMotelySearch search = new MotelySearchSettings<ShuffleFinderFilterDesc.ShuffleFinderFilter>(new ShuffleFinderFilterDesc())
@@ -17,8 +19,6 @@ IMotelySearch search = new MotelySearchSettings<NegativePerkeoFilterDescNew.Filt
     // .WithAdditionalFilter(new PerkeoObservatoryFilterDesc())
     // .WithListSearch(["TACO", "DIVA", "7729", "AAAA", "BBBB", "CCCC", "DDDD", "EEEE"])
     // .WithListSearch(["87DQOC3C"])
-    // .WithListSearch(["TIQR1111"])
+    // .WithListSearch(["XEQH7CP9"])
     // .WithStake(MotelyStake.Black)
     .Start();
-
-

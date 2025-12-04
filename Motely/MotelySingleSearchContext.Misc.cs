@@ -57,18 +57,28 @@ ref partial struct MotelySingleSearchContext
     #endregion
 
     #region Banannanas
-    public MotelySinglePrngStream CreateCavendishPrngStream(bool isCached)
+    public MotelySinglePrngStream CreateCavendishPrngStream(bool isCached = false)
         => CreatePrngStream(MotelyPrngKeys.JokerCavendish, isCached);
 
     public bool GetNextCavendishExtinct(ref MotelySinglePrngStream cavendishStream, double baseLuck = 1)
         => GetNextRandom(ref cavendishStream) < baseLuck / Motely.JokerCavendishChance;
 
-    public MotelySinglePrngStream CreateGrosMichelPrngStream(bool isCached)
+    public MotelySinglePrngStream CreateGrosMichelPrngStream(bool isCached = false)
         => CreatePrngStream(MotelyPrngKeys.JokerGrosMichel, isCached);
 
     public bool GetNextGrosMichelExtinct(ref MotelySinglePrngStream grosMichelStream, double baseLuck = 1)
         => GetNextRandom(ref grosMichelStream) < baseLuck / Motely.JokerGrosMichelChance;
 
+    #endregion
+
+    #region Erratic
+
+    public MotelySinglePrngStream CreateErraticDeckPrngStream(bool isCached = false)
+        => CreatePrngStream(MotelyPrngKeys.DeckErratic, isCached);
+
+    public MotelyItem GetNextErraticDeckCard(ref MotelySinglePrngStream erraticDeckStream)
+        => new(GetNextRandomElement(ref erraticDeckStream, MotelyEnum<MotelyPlayingCard>.Values));
+        
     #endregion
 
 }

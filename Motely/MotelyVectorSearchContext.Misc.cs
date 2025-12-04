@@ -79,4 +79,16 @@ ref partial struct MotelyVectorSearchContext
 
     #endregion
 
+    #region Erratic
+
+    public MotelyVectorPrngStream CreateErraticDeckPrngStream(bool isCached = false)
+        => CreatePrngStream(MotelyPrngKeys.DeckErratic, isCached);
+
+    public MotelyItemVector GetNextErraticDeckCard(ref MotelyVectorPrngStream erraticDeckStream)
+        => new(Vector256.BitwiseOr(
+            GetNextRandomElement(ref erraticDeckStream, MotelyEnum<MotelyPlayingCard>.Values).HardwareVector,
+            Vector256.Create((int)MotelyItemTypeCategory.PlayingCard)
+        ));
+
+    #endregion
 }

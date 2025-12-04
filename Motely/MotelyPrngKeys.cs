@@ -68,6 +68,8 @@ public static class MotelyPrngKeys
 
     public const string SealPurple = "8ba";
 
+    public const string DeckErratic = "erratic";
+
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif

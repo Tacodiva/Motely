@@ -56,6 +56,8 @@ public ref struct MotelyFilterCreationContext
 
     public readonly void CacheAnteFirstVoucher(int ante, bool force = false) => CacheVoucherStream(ante, force);
 
+    public readonly void CacheErraticDeckPrngStream() => CachePseudoHash(MotelyPrngKeys.DeckErratic);
+
     private readonly void CacheTarotStream(int ante, string source, bool cacheTarot, bool cacheResample, bool cacheSoul, bool force)
     {
         if (cacheTarot)
