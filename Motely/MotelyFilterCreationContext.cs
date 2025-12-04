@@ -140,14 +140,14 @@ public ref struct MotelyFilterCreationContext
 
     private readonly void CacheJokerStream(int ante,
         string source, string eternalPerishableSource, string rentalSource,
-        MotelyJokerStreamFlags flags, bool force)
+        bool excludeEdition, bool excludeStickers, bool force)
     {
-        if (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeEdition))
+        if (!excludeEdition)
         {
             CachePseudoHash(MotelyPrngKeys.JokerEdition + source + ante, force);
         }
 
-        if (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeStickers))
+        if (!excludeStickers)
         {
             if (Stake >= MotelyStake.Black)
             {
@@ -167,13 +167,16 @@ public ref struct MotelyFilterCreationContext
         bool force = false
     )
     {
-        CachePseudoHash(MotelyPrngKeys.JokerRarity + MotelyPrngKeys.ShopItemSource + ante, force);
+        if (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeJokerType))
+            CachePseudoHash(MotelyPrngKeys.JokerRarity + MotelyPrngKeys.ShopItemSource + ante, force);
 
         CacheJokerStream(ante,
             MotelyPrngKeys.ShopItemSource,
             MotelyPrngKeys.DefaultJokerEternalPerishableSource,
             MotelyPrngKeys.DefaultJokerRentalSource,
-            flags, force
+            flags.HasFlag(MotelyJokerStreamFlags.ExcludeEdition),
+            flags.HasFlag(MotelyJokerStreamFlags.ExcludeStickers),
+            force
         );
 
         // TODO Cache the common joker stream?
@@ -182,21 +185,25 @@ public ref struct MotelyFilterCreationContext
     private readonly void CacheFixedRarityJokerStream(int ante,
         string source, string eternalPerishableSource, string rentalSource,
         MotelyJokerRarity rarity,
-        MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default,
+        MotelyJokerFixedRarityStreamFlags flags = MotelyJokerFixedRarityStreamFlags.Default,
         bool force = false
     )
     {
-        CachePseudoHash(MotelyPrngKeys.FixedRarityJoker(rarity, source, ante), force);
+        if (!flags.HasFlag(MotelyJokerFixedRarityStreamFlags.ExcludeJokerType))
+            CachePseudoHash(MotelyPrngKeys.FixedRarityJoker(rarity, source, ante), force);
 
         CacheJokerStream(ante,
-            source, eternalPerishableSource, rentalSource, flags, force
+            source, eternalPerishableSource, rentalSource,
+            flags.HasFlag(MotelyJokerFixedRarityStreamFlags.ExcludeEdition),
+            flags.HasFlag(MotelyJokerFixedRarityStreamFlags.ExcludeStickers),
+            force
         );
     }
 
 
     public readonly void CacheSoulJokerStream(
         int ante,
-        MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default,
+        MotelyJokerFixedRarityStreamFlags flags = MotelyJokerFixedRarityStreamFlags.Default,
         bool force = false
     )
     {

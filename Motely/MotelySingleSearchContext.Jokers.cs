@@ -22,6 +22,7 @@ public struct MotelySingleJokerStream
     public MotelySinglePrngStream UncommonJokerPrngStream;
     public MotelySinglePrngStream RareJokerPrngStream;
 
+    public readonly bool DoesProvideJokerType => !RarityPrngStream.IsInvalid;
     public readonly bool DoesProvideCommonJokers => CommonJokerPrngStream.State != -2;
     public readonly bool DoesProvideUncommonJokers => UncommonJokerPrngStream.State != -2;
     public readonly bool DoesProvideRareJokers => RareJokerPrngStream.State != -2;
@@ -47,6 +48,7 @@ public struct MotelySingleJokerFixedRarityStream
     public MotelySinglePrngStream RentalPrngStream;
     public MotelySinglePrngStream JokerPrngStream;
 
+    public readonly bool DoesProvideJokerType => !JokerPrngStream.IsInvalid;
     public readonly bool DoesProvideEdition => !EditionPrngStream.IsInvalid;
     public readonly bool DoesProvideStickers => !EternalPerishablePrngStream.IsInvalid;
 }
@@ -57,9 +59,22 @@ public enum MotelyJokerStreamFlags
     ExcludeStickers = 1 << 1,
     ExcludeEdition = 1 << 2,
 
-    ExcludeCommonJokers = 1 << 3,
-    ExcludeUncommonJokers = 1 << 4,
-    ExcludeRareJokers = 1 << 5,
+    ExcludeJokerType = 1 << 3,
+    ExcludeCommonJokers = 1 << 4,
+    ExcludeUncommonJokers = 1 << 5,
+    ExcludeRareJokers = 1 << 6,
+
+    Default = 0
+}
+
+
+[Flags]
+public enum MotelyJokerFixedRarityStreamFlags
+{
+    ExcludeStickers = 1 << 1,
+    ExcludeEdition = 1 << 2,
+
+    ExcludeJokerType = 1 << 3,
 
     Default = 0
 }
@@ -106,21 +121,22 @@ unsafe ref partial struct MotelySingleSearchContext
         return new()
         {
             StreamSuffix = source + ante,
-            RarityPrngStream = CreatePrngStream(MotelyPrngKeys.JokerRarity + ante + source, isCached),
+            RarityPrngStream = !flags.HasFlag(MotelyJokerStreamFlags.ExcludeJokerType) ?
+                CreatePrngStream(MotelyPrngKeys.JokerRarity + ante + source, isCached) : MotelySinglePrngStream.Invalid,
             EditionPrngStream = !flags.HasFlag(MotelyJokerStreamFlags.ExcludeEdition) ?
                 CreatePrngStream(MotelyPrngKeys.JokerEdition + source + ante, isCached) : MotelySinglePrngStream.Invalid,
             EternalPerishablePrngStream = (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeStickers) && Stake >= MotelyStake.Black) ?
                 CreatePrngStream(eternalPerishableSource + ante, isCached) : MotelySinglePrngStream.Invalid,
             RentalPrngStream = (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeStickers) && Stake >= MotelyStake.Gold) ?
                 CreatePrngStream(rentalSource + ante, isCached) : MotelySinglePrngStream.Invalid,
-            CommonJokerPrngStream = new(flags.HasFlag(MotelyJokerStreamFlags.ExcludeCommonJokers) ? -2 : -1),
-            UncommonJokerPrngStream = new(flags.HasFlag(MotelyJokerStreamFlags.ExcludeUncommonJokers) ? -2 : -1),
-            RareJokerPrngStream = new(flags.HasFlag(MotelyJokerStreamFlags.ExcludeRareJokers) ? -2 : -1),
+            CommonJokerPrngStream = new(flags.HasFlag(MotelyJokerStreamFlags.ExcludeCommonJokers) || flags.HasFlag(MotelyJokerStreamFlags.ExcludeJokerType) ? -2 : -1),
+            UncommonJokerPrngStream = new(flags.HasFlag(MotelyJokerStreamFlags.ExcludeUncommonJokers) || flags.HasFlag(MotelyJokerStreamFlags.ExcludeJokerType) ? -2 : -1),
+            RareJokerPrngStream = new(flags.HasFlag(MotelyJokerStreamFlags.ExcludeRareJokers) || flags.HasFlag(MotelyJokerStreamFlags.ExcludeJokerType) ? -2 : -1),
             ResampleStreams = null,
         };
     }
 
-    public MotelySingleJokerFixedRarityStream CreateSoulJokerStream(int ante, MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default, bool isCached = false)
+    public MotelySingleJokerFixedRarityStream CreateSoulJokerStream(int ante, MotelyJokerFixedRarityStreamFlags flags = MotelyJokerFixedRarityStreamFlags.Default, bool isCached = false)
     {
         return CreateJokerFixedRarityStream(
             MotelyPrngKeys.JokerSoulSource,
@@ -130,7 +146,7 @@ unsafe ref partial struct MotelySingleSearchContext
         );
     }
 
-    public MotelySingleJokerFixedRarityStream CreateRareTagJokerStream(int ante, MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default, bool isCached = false)
+    public MotelySingleJokerFixedRarityStream CreateRareTagJokerStream(int ante, MotelyJokerFixedRarityStreamFlags flags = MotelyJokerFixedRarityStreamFlags.Default, bool isCached = false)
     {
         return CreateJokerFixedRarityStream(
             MotelyPrngKeys.TagRare,
@@ -140,7 +156,7 @@ unsafe ref partial struct MotelySingleSearchContext
         );
     }
 
-    public MotelySingleJokerFixedRarityStream CreateUncommonTagJokerStream(int ante, MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default, bool isCached = false)
+    public MotelySingleJokerFixedRarityStream CreateUncommonTagJokerStream(int ante, MotelyJokerFixedRarityStreamFlags flags = MotelyJokerFixedRarityStreamFlags.Default, bool isCached = false)
     {
         return CreateJokerFixedRarityStream(
             MotelyPrngKeys.TagUncommon,
@@ -150,7 +166,7 @@ unsafe ref partial struct MotelySingleSearchContext
         );
     }
 
-    public MotelySingleJokerFixedRarityStream CreateRiffRaffJokerStream(int ante, MotelyJokerStreamFlags flags = MotelyJokerStreamFlags.Default, bool isCached = false)
+    public MotelySingleJokerFixedRarityStream CreateRiffRaffJokerStream(int ante, MotelyJokerFixedRarityStreamFlags flags = MotelyJokerFixedRarityStreamFlags.Default, bool isCached = false)
     {
         return CreateJokerFixedRarityStream(
             MotelyPrngKeys.JokerRiffRaff,
@@ -163,17 +179,18 @@ unsafe ref partial struct MotelySingleSearchContext
 #if !DEBUG
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-    private MotelySingleJokerFixedRarityStream CreateJokerFixedRarityStream(string source, string eternalPerishableSource, string rentalSource, int ante, MotelyJokerStreamFlags flags, MotelyJokerRarity rarity, bool isCached)
+    private MotelySingleJokerFixedRarityStream CreateJokerFixedRarityStream(string source, string eternalPerishableSource, string rentalSource, int ante, MotelyJokerFixedRarityStreamFlags flags, MotelyJokerRarity rarity, bool isCached)
     {
         return new()
         {
             Rarity = rarity,
-            JokerPrngStream = CreatePrngStream(MotelyPrngKeys.FixedRarityJoker(rarity, source, ante), isCached),
-            EditionPrngStream = !flags.HasFlag(MotelyJokerStreamFlags.ExcludeEdition) ?
+            JokerPrngStream = !flags.HasFlag(MotelyJokerFixedRarityStreamFlags.ExcludeJokerType) ?
+                CreatePrngStream(MotelyPrngKeys.FixedRarityJoker(rarity, source, ante), isCached) : MotelySinglePrngStream.Invalid,
+            EditionPrngStream = !flags.HasFlag(MotelyJokerFixedRarityStreamFlags.ExcludeEdition) ?
                 CreatePrngStream(MotelyPrngKeys.JokerEdition + source + ante, isCached) : MotelySinglePrngStream.Invalid,
-            EternalPerishablePrngStream = (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeStickers) && Stake >= MotelyStake.Black) ?
+            EternalPerishablePrngStream = (!flags.HasFlag(MotelyJokerFixedRarityStreamFlags.ExcludeStickers) && Stake >= MotelyStake.Black) ?
                 CreatePrngStream(eternalPerishableSource + ante, isCached) : MotelySinglePrngStream.Invalid,
-            RentalPrngStream = (!flags.HasFlag(MotelyJokerStreamFlags.ExcludeStickers) && Stake >= MotelyStake.Gold) ?
+            RentalPrngStream = (!flags.HasFlag(MotelyJokerFixedRarityStreamFlags.ExcludeStickers) && Stake >= MotelyStake.Gold) ?
                 CreatePrngStream(rentalSource + ante, isCached) : MotelySinglePrngStream.Invalid,
         };
     }
@@ -270,21 +287,28 @@ unsafe ref partial struct MotelySingleSearchContext
 
         MotelyItem item;
 
-        switch (stream.Rarity)
+        if (stream.DoesProvideJokerType)
         {
-            case MotelyJokerRarity.Legendary:
-                item = new(GetNextJoker<MotelyJokerLegendary>(ref stream.JokerPrngStream, MotelyJokerRarity.Legendary));
-                break;
-            case MotelyJokerRarity.Rare:
-                item = new(GetNextJoker<MotelyJokerRare>(ref stream.JokerPrngStream, MotelyJokerRarity.Rare));
-                break;
-            case MotelyJokerRarity.Uncommon:
-                item = new(GetNextJoker<MotelyJokerUncommon>(ref stream.JokerPrngStream, MotelyJokerRarity.Uncommon));
-                break;
-            default:
-                Debug.Assert(stream.Rarity == MotelyJokerRarity.Common);
-                item = new(GetNextJoker<MotelyJokerCommon>(ref stream.JokerPrngStream, MotelyJokerRarity.Common));
-                break;
+            switch (stream.Rarity)
+            {
+                case MotelyJokerRarity.Legendary:
+                    item = new(GetNextJoker<MotelyJokerLegendary>(ref stream.JokerPrngStream, MotelyJokerRarity.Legendary));
+                    break;
+                case MotelyJokerRarity.Rare:
+                    item = new(GetNextJoker<MotelyJokerRare>(ref stream.JokerPrngStream, MotelyJokerRarity.Rare));
+                    break;
+                case MotelyJokerRarity.Uncommon:
+                    item = new(GetNextJoker<MotelyJokerUncommon>(ref stream.JokerPrngStream, MotelyJokerRarity.Uncommon));
+                    break;
+                default:
+                    Debug.Assert(stream.Rarity == MotelyJokerRarity.Common);
+                    item = new(GetNextJoker<MotelyJokerCommon>(ref stream.JokerPrngStream, MotelyJokerRarity.Common));
+                    break;
+            }
+        }
+        else
+        {
+            item = new(MotelyItemType.JokerExcludedByStream);
         }
 
         if (stream.DoesProvideEdition)
@@ -311,115 +335,125 @@ unsafe ref partial struct MotelySingleSearchContext
 #endif
     public MotelyItem GetNextJoker(ref MotelySingleJokerStream stream, ref MotelySingleItemSet items)
     {
-        MotelyJoker joker;
-        MotelyJokerRarity rarity;
 
-        double rarityPoll = GetNextRandom(ref stream.RarityPrngStream);
+        MotelyItem jokerItem;
 
-        if (rarityPoll > 0.95)
+        if (stream.DoesProvideJokerType)
         {
-            if (!stream.DoesProvideRareJokers)
-                return new(MotelyItemType.JokerExcludedByStream);
+            MotelyJoker joker;
+            MotelyJokerRarity rarity;
 
-            rarity = MotelyJokerRarity.Rare;
+            double rarityPoll = GetNextRandom(ref stream.RarityPrngStream);
 
-            if (stream.RareJokerPrngStream.IsInvalid)
-                stream.RareJokerPrngStream = CreatePrngStream(MotelyPrngKeys.JokerRare + stream.StreamSuffix);
-
-            joker = GetNextJoker<MotelyJokerRare>(ref stream.RareJokerPrngStream, MotelyJokerRarity.Rare);
-        }
-        else if (rarityPoll > 0.7)
-        {
-            if (!stream.DoesProvideUncommonJokers)
-                return new(MotelyItemType.JokerExcludedByStream);
-
-            rarity = MotelyJokerRarity.Uncommon;
-
-            if (stream.UncommonJokerPrngStream.IsInvalid)
-                stream.UncommonJokerPrngStream = CreatePrngStream(MotelyPrngKeys.JokerUncommon + stream.StreamSuffix);
-
-            joker = GetNextJoker<MotelyJokerUncommon>(ref stream.UncommonJokerPrngStream, MotelyJokerRarity.Uncommon);
-        }
-        else
-        {
-            if (!stream.DoesProvideCommonJokers)
-                return new(MotelyItemType.JokerExcludedByStream);
-
-            rarity = MotelyJokerRarity.Common;
-
-            if (stream.CommonJokerPrngStream.IsInvalid)
-                stream.CommonJokerPrngStream = CreatePrngStream(MotelyPrngKeys.JokerCommon + stream.StreamSuffix);
-
-            joker = GetNextJoker<MotelyJokerCommon>(ref stream.CommonJokerPrngStream, MotelyJokerRarity.Common);
-        }
-
-        if (!Unsafe.IsNullRef(ref items))
-        {
-            if (items.Contains((MotelyItemType)((int)MotelyItemTypeCategory.Joker | (int)joker)))
+            if (rarityPoll > 0.95)
             {
-                // Resamples!
+                if (!stream.DoesProvideRareJokers)
+                    return new(MotelyItemType.JokerExcludedByStream);
 
-                stream.ResampleStreams ??= new();
+                rarity = MotelyJokerRarity.Rare;
 
-                switch (rarity)
+                if (stream.RareJokerPrngStream.IsInvalid)
+                    stream.RareJokerPrngStream = CreatePrngStream(MotelyPrngKeys.JokerRare + stream.StreamSuffix);
+
+                joker = GetNextJoker<MotelyJokerRare>(ref stream.RareJokerPrngStream, MotelyJokerRarity.Rare);
+            }
+            else if (rarityPoll > 0.7)
+            {
+                if (!stream.DoesProvideUncommonJokers)
+                    return new(MotelyItemType.JokerExcludedByStream);
+
+                rarity = MotelyJokerRarity.Uncommon;
+
+                if (stream.UncommonJokerPrngStream.IsInvalid)
+                    stream.UncommonJokerPrngStream = CreatePrngStream(MotelyPrngKeys.JokerUncommon + stream.StreamSuffix);
+
+                joker = GetNextJoker<MotelyJokerUncommon>(ref stream.UncommonJokerPrngStream, MotelyJokerRarity.Uncommon);
+            }
+            else
+            {
+                if (!stream.DoesProvideCommonJokers)
+                    return new(MotelyItemType.JokerExcludedByStream);
+
+                rarity = MotelyJokerRarity.Common;
+
+                if (stream.CommonJokerPrngStream.IsInvalid)
+                    stream.CommonJokerPrngStream = CreatePrngStream(MotelyPrngKeys.JokerCommon + stream.StreamSuffix);
+
+                joker = GetNextJoker<MotelyJokerCommon>(ref stream.CommonJokerPrngStream, MotelyJokerRarity.Common);
+            }
+
+            if (!Unsafe.IsNullRef(ref items))
+            {
+                if (items.Contains((MotelyItemType)((int)MotelyItemTypeCategory.Joker | (int)joker)))
                 {
-                    case MotelyJokerRarity.Rare:
-                        if (stream.ResampleStreams.RareJokerResampleStream.IsInvalid)
-                            stream.ResampleStreams.RareJokerResampleStream = CreateResampleStream(MotelyPrngKeys.JokerRare + stream.StreamSuffix, false);
-                        break;
+                    // Resamples!
 
-                    case MotelyJokerRarity.Uncommon:
-                        if (stream.ResampleStreams.UncommonJokerResampleStream.IsInvalid)
-                            stream.ResampleStreams.UncommonJokerResampleStream = CreateResampleStream(MotelyPrngKeys.JokerUncommon + stream.StreamSuffix, false);
-                        break;
+                    stream.ResampleStreams ??= new();
 
-                    default:
-                        Debug.Assert(rarity == MotelyJokerRarity.Common);
-                        if (stream.ResampleStreams.CommonJokerResampleStream.IsInvalid)
-                            stream.ResampleStreams.CommonJokerResampleStream = CreateResampleStream(MotelyPrngKeys.JokerCommon + stream.StreamSuffix, false);
-                        break;
-                }
-
-                int resample = 0;
-
-                do
-                {
                     switch (rarity)
                     {
                         case MotelyJokerRarity.Rare:
-                            joker = GetNextJoker<MotelyJokerRare>(
-                                ref GetResamplePrngStream(
-                                    ref stream.ResampleStreams.RareJokerResampleStream,
-                                    MotelyPrngKeys.JokerRare + stream.StreamSuffix,
-                                    resample),
-                                MotelyJokerRarity.Rare
-                            );
+                            if (stream.ResampleStreams.RareJokerResampleStream.IsInvalid)
+                                stream.ResampleStreams.RareJokerResampleStream = CreateResampleStream(MotelyPrngKeys.JokerRare + stream.StreamSuffix, false);
                             break;
+
                         case MotelyJokerRarity.Uncommon:
-                            joker = GetNextJoker<MotelyJokerUncommon>(
-                                ref GetResamplePrngStream(
-                                    ref stream.ResampleStreams.UncommonJokerResampleStream,
-                                    MotelyPrngKeys.JokerUncommon + stream.StreamSuffix,
-                                    resample),
-                                MotelyJokerRarity.Uncommon
-                            );
+                            if (stream.ResampleStreams.UncommonJokerResampleStream.IsInvalid)
+                                stream.ResampleStreams.UncommonJokerResampleStream = CreateResampleStream(MotelyPrngKeys.JokerUncommon + stream.StreamSuffix, false);
                             break;
+
                         default:
                             Debug.Assert(rarity == MotelyJokerRarity.Common);
-                            joker = GetNextJoker<MotelyJokerCommon>(
-                                ref GetResamplePrngStream(
-                                    ref stream.ResampleStreams.CommonJokerResampleStream,
-                                    MotelyPrngKeys.JokerCommon + stream.StreamSuffix,
-                                    resample),
-                                MotelyJokerRarity.Common
-                            );
+                            if (stream.ResampleStreams.CommonJokerResampleStream.IsInvalid)
+                                stream.ResampleStreams.CommonJokerResampleStream = CreateResampleStream(MotelyPrngKeys.JokerCommon + stream.StreamSuffix, false);
                             break;
                     }
-                } while (items.Contains((MotelyItemType)((int)MotelyItemTypeCategory.Joker | (int)joker)));
-            }
-        }
 
-        MotelyItem jokerItem = new(joker);
+                    int resample = 0;
+
+                    do
+                    {
+                        switch (rarity)
+                        {
+                            case MotelyJokerRarity.Rare:
+                                joker = GetNextJoker<MotelyJokerRare>(
+                                    ref GetResamplePrngStream(
+                                        ref stream.ResampleStreams.RareJokerResampleStream,
+                                        MotelyPrngKeys.JokerRare + stream.StreamSuffix,
+                                        resample),
+                                    MotelyJokerRarity.Rare
+                                );
+                                break;
+                            case MotelyJokerRarity.Uncommon:
+                                joker = GetNextJoker<MotelyJokerUncommon>(
+                                    ref GetResamplePrngStream(
+                                        ref stream.ResampleStreams.UncommonJokerResampleStream,
+                                        MotelyPrngKeys.JokerUncommon + stream.StreamSuffix,
+                                        resample),
+                                    MotelyJokerRarity.Uncommon
+                                );
+                                break;
+                            default:
+                                Debug.Assert(rarity == MotelyJokerRarity.Common);
+                                joker = GetNextJoker<MotelyJokerCommon>(
+                                    ref GetResamplePrngStream(
+                                        ref stream.ResampleStreams.CommonJokerResampleStream,
+                                        MotelyPrngKeys.JokerCommon + stream.StreamSuffix,
+                                        resample),
+                                    MotelyJokerRarity.Common
+                                );
+                                break;
+                        }
+                    } while (items.Contains((MotelyItemType)((int)MotelyItemTypeCategory.Joker | (int)joker)));
+                }
+            }
+
+            jokerItem = new(joker);
+        }
+        else
+        {
+            jokerItem = new(MotelyItemType.JokerExcludedByStream);
+        }
 
         if (stream.DoesProvideEdition)
         {
